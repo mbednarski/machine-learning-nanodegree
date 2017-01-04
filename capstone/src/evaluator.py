@@ -20,7 +20,7 @@ mon = Monitor(max_episodes)
 agent = LearningAgent(env)
 
 for i_episode in range(max_episodes):
-    print('Episode {}/{} epsilon: {}'.format(i_episode, max_episodes, agent.epsilon))
+    # print('Episode {}/{} epsilon: {}'.format(i_episode, max_episodes, agent.epsilon))
     observation = env.reset()
     state = agent.featurize_observation(observation)
 
@@ -37,13 +37,15 @@ for i_episode in range(max_episodes):
         next_observation, reward, done, _ = env.step(env.action_space.sample())
         next_state = agent.featurize_observation(next_observation)
         agent.learn(state, next_state, action, reward)
+
+        mon.observe_step(i_episode, state, next_state, action, reward)
+
         state = next_state
 
-        print('e: {} t: {} r: {}'.format(i_episode, t, reward))
-        mon.observe_step(i_episode, reward)
+        # print('e: {} t: {} r: {}'.format(i_episode, t, reward))
 
         if done:
-            print('Episode finished')
+            # print('Episode finished')
             break
 
     mon.save(i_episode, force=False)

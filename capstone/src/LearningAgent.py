@@ -10,7 +10,7 @@ class LearningAgent:
         return np.array(observation)
 
     def get_action(self, state):
-        return None
+        return self.env.action_space.sample()
 
     def learn(self, state, next_state, action, reward):
         pass

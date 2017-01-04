@@ -6,7 +6,7 @@ import gym
 import os
 import sys
 
-from LearningAgent import LearningAgent
+from learning_agent import LearningAgent
 from monitor import Monitor
 
 # sys.stdout = open(os.devnull, 'w')
@@ -45,12 +45,11 @@ for i_episode in range(max_episodes):
         # print('e: {} t: {} r: {}'.format(i_episode, t, reward))
 
         if done:
-            # print('Episode finished')
+            print('Episode finished')
             break
 
-    mon.save(i_episode, force=False)
 
-mon.save(i_episode, force=True)
+mon.save(i_episode)
 
 p = Plotter()
 p.plot_epsilon()

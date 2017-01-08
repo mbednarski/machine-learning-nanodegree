@@ -12,7 +12,7 @@ from monitor import Monitor
 # sys.stdout = open(os.devnull, 'w')
 from plotter import Plotter
 
-max_episodes = 2000
+max_episodes = 20000
 
 env = gym.envs.make("LunarLander-v2")
 mon = Monitor(max_episodes)
@@ -29,7 +29,7 @@ for i_episode in range(max_episodes):
     mon.observe_episode(i_episode, agent.epsilon)
 
     for t in itertools.count():
-        if t >= 10000:
+        if t >= 1000:
             print('aborting...')
             break
 
@@ -42,10 +42,11 @@ for i_episode in range(max_episodes):
 
         state = next_state
 
-        # print('e: {} t: {} r: {}'.format(i_episode, t, reward))
+        # print('e: {} t: {} r: {} e:{}'.format(i_episode, t, reward, agent.epsilon))
 
         if done:
             print('Episode finished')
+            print('e: {} t: {} r: {} e:{} a:{}'.format(i_episode, t, reward, agent.epsilon, agent.alpha))
             break
 
 

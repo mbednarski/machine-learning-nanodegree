@@ -74,7 +74,15 @@ class Plotter:
         plt.show()
 
     def plot_creward(self):
+        rolling = np.zeros(self.creward_data.size)
+        rolling2 = np.zeros(self.creward_data.size)
+        for i in range(0, self.creward_data.size):
+            rolling[i] = np.mean(self.creward_data[i-100:i])
+            rolling2[i] = np.mean(self.creward_data[i-300:i])
+
         plt.plot(self.creward_data)
+        plt.plot(rolling, color='red', linewidth=3.0)
+        plt.plot(rolling2, color='orange', linewidth=3.0)
         plt.show()
 
     def plot_reward(self):

@@ -1,0 +1,57 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{gensymb}
+\usepackage{textcomp}
+
+\title{Machine Learning Engineer Nanodegree Capstone Project}
+\author{Mateusz Bednarski}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+
+
+\section{Introduction}
+
+Domain for my capstone project is solving classical control problems. I have selected two: Cart pole and Mountain car. Both of them are well-know problems in computer science study. For purposes of this project I decided to make use of OpenAI Gym (LINK). Gym is set of environments simulating various tasks. It provides ready to use simulators and frameworks for comparing algorithms. Also it does have environments with Cart pole and Mountain car. There is a few reasons I have chosen this setup:
+
+\begin{itemize}
+\item For first, reinforcement learning interested me the most, so I want to get deeper into this.
+
+\item Both selected problems are well-know and used to compare algorithms perfomance
+\item OpenAI provides leaderborads for each environement, making result comparison easy
+\item 
+OpenAI provides problem implementations, thus I can focus only on RL part.
+\item Both problems have continous state space, so basic tabular Q-learing will not work. I need to examine more sophisticated techniques
+\item I want to solve two problems instead of one, in order to see how solution will generalize (and no be strongly problem-specified)
+\end{itemize}
+
+
+Let's briefly describe both selected problems.
+
+\section{Problem Statement}
+\subsection{Cart Pole}
+
+There is a frictionless track, and a vehicle attached to it. Vehicle can move left or right. On top of it, pole is attached. Cart cannot stay at place. Goal is to keep pole vertical and not allow it to fall or run out of track by moving cart left/right. Environment already provides reward (only one): +1 every step that pole is upright
+
+Simulation ends either when pole is deviated over $15\degree$ from vertical or cart is 2.4 units away from the center of the track. Detailed discussion will be provided in later section.
+
+
+\section{Data Exploration}
+\subsection{Cart Pole}
+
+Action space is a discrite, finite set $A = \{0,1\}$ where 0 means go left, and 1 go right.
+Space state is a vector of
+
+
+
+
+
+
+//heatmap
+
+
+\end{document}
+

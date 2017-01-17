@@ -11,23 +11,27 @@ from monitor import Monitor
 
 # sys.stdout = open(os.devnull, 'w')
 from plotter import Plotter
+from src.hdf5monitor import Hdf5Monitor
+from src.random_agent import RandomAgent
 
-max_episodes = 20000
+max_episodes = 4
 
-env = gym.envs.make("LunarLander-v2")
-mon = Monitor(max_episodes)
+env = gym.envs.make("CartPole-v1")
+env = gym.envs.make("MountainCar-v0")
 env.reset()
 
-agent = LearningAgent(env)
+agent = RandomAgent(env)
 
+# mon = Monitor(max_episodes, observation_size=4)
+mon = Hdf5Monitor(env, agent, 4)
 for i_episode in range(max_episodes):
     # print('Episode {}/{} epsilon: {}'.format(i_episode, max_episodes, agent.epsilon))
     observation = env.reset()
     # state = agent.featurize_observation(observation)
 
-    agent.new_episode(i_episode)
+    agent.new_episode(i_episode,observation)
 
-    mon.observe_episode(i_episode, agent.epsilon)
+    # mon.observe_episode(i_episode, agent.epsilon)
 
     for t in itertools.count():
         if t >= 10000:
@@ -38,12 +42,15 @@ for i_episode in range(max_episodes):
         next_observation, reward, done, _ = env.step(action)
         agent.learn(observation, next_observation, action, reward)
 
-        mon.observe_step(i_episode, observation, next_observation, action, reward)
+        # mon.observe_step(i_episode, observation, next_observation, action, reward)
+
+        mon.append_observation(observation)
+        mon.append_action(action)
 
         observation = next_observation
 
-        if i_episode % 75 == 0:
-            env.render()
+        # if i_episode % 75 == 0:
+        #     env.render()
 
         # print('e: {} t: {} r: {} e:{}'.format(i_episode, t, reward, agent.epsilon))
 

@@ -2,7 +2,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage{gensymb}
 \usepackage{textcomp}
-
+\usepackage{mathtools}
+\usepackage{amssymb}
 \title{Machine Learning Engineer Nanodegree Capstone Project}
 \author{Mateusz Bednarski}
 \date{\today}
@@ -38,14 +39,34 @@ There is a frictionless track, and a vehicle attached to it. Vehicle can move le
 
 Simulation ends either when pole is deviated over $15\degree$ from vertical or cart is 2.4 units away from the center of the track. Detailed discussion will be provided in later section.
 
+TODO
 
 \section{Data Exploration}
 \subsection{Cart Pole}
 
 Action space is a discrite, finite set $A = \{0,1\}$ where 0 means go left, and 1 go right.
-Space state is a vector of
+Space state is a vector of four real values. 
+\begin{multline}
+ S = (s_0, s_1, s_2, s_3) \in \mathbb{R}^4 \\
+-4.8 < s_0 < 4.8 \\
+-\infty < s_1 < \infty \\
+-0.42 < s_2 < 0.42 \\
+-\infty < s_3 < \infty \\
+\end{multline}
+
+Meaning is following: $s_0$ - cart position, $s_1$ cart velocity, $s_2$ - pole angle and $s_4$ - pola angular velocity.
 
 
+\subsection{Mountain Car}
+Action space is a discrite, finite set $A = \{0,1,2\}$ wchich means consecutively move accelerate left, do nothing, accelerate right. Space state is a 2-dimensional vector.
+
+\begin{multline*}
+ S = (s_0, s_1) \in \mathbb{R}^2 \\
+-1.2 < s_0 < 0.6 \\
+-0.07 < s_1 < 0.07
+\end{multline*}
+
+$s_0$ is position and $s_1$ is velocity.
 
 
 

@@ -8,6 +8,14 @@
 \author{Mateusz Bednarski}
 \date{\today}
 
+
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+
+
+\usepackage{hyperref}
+
+
 \begin{document}
 
 \maketitle
@@ -16,7 +24,7 @@
 
 \section{Introduction}
 
-Domain for my capstone project is solving classical control problems. I have selected two: Cart pole and Mountain car. Both of them are well-know problems in computer science study. For purposes of this project I decided to make use of OpenAI Gym (LINK). Gym is set of environments simulating various tasks. It provides ready to use simulators and frameworks for comparing algorithms. Also it does have environments with Cart pole and Mountain car. There is a few reasons I have chosen this setup:
+Domain for my capstone project is solving classical control problems. I have selected two: Cart pole and Mountain car. Both of them are well-know problems in computer science study. For purposes of this project I decided to make use of OpenAI Gym (LINK). Gym is set of environments simulating various tasks. It provides ready to use simulators and frameworks for comparing algorithms. Also it does have environments with Cart Pole\footnote{\url{https://gym.openai.com/envs/CartPole-v1}} and Mountain Car\footnote{\url{https://gym.openai.com/envs/MountainCar-v0}} which are well-know reinforcement-learning problems. There is a few reasons I have chosen this setup:
 
 \begin{itemize}
 \item For first, reinforcement learning interested me the most, so I want to get deeper into this.
@@ -26,7 +34,7 @@ Domain for my capstone project is solving classical control problems. I have sel
 \item 
 OpenAI provides problem implementations, thus I can focus only on RL part.
 \item Both problems have continous state space, so basic tabular Q-learing will not work. I need to examine more sophisticated techniques
-\item I want to solve two problems instead of one, in order to see how solution will generalize (and no be strongly problem-specified)
+\item I want to solve two problems instead of one, in order to see how solution will generalize (not being strongly problem-specified)
 \end{itemize}
 
 
@@ -37,11 +45,35 @@ Let's briefly describe both selected problems.
 
 There is a frictionless track, and a vehicle attached to it. Vehicle can move left or right. On top of it, pole is attached. Cart cannot stay at place. Goal is to keep pole vertical and not allow it to fall or run out of track by moving cart left/right. Environment already provides reward (only one): +1 every step that pole is upright
 
-Simulation ends either when pole is deviated over $15\degree$ from vertical or cart is 2.4 units away from the center of the track. Detailed discussion will be provided in later section.
+Simulation ends either when pole is deviated over $15\degree$ from vertical or cart is 2.4 units away from the center of the track.
 
-TODO
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{cartpole_intro.png} 
+\centering
+\caption{The Cart Pole environment from OpenAI.}
+\end{figure}
+
+
+\subsection{Mountain Car}
+There is a track between two mountains. Vehicle starts in a valley between them. The goal is to climb right top. Car does not have enough power to do this just riding right - it needs to build momentum. 
+
+The only reward of -1 is given every timestep. There is no reward on approach top. But this is sufficent to minimize time spent, as simulation ends when reached right mountain.
+
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{mountaincar_intro.png} 
+\centering
+\caption{The Mountain Car environment form OpenAI.}
+\end{figure}
+
+
+\subsection{Evaluation metric}
+
+For measuring perfomance I will use moving average of cumulative reward of last 100 episodes.
 
 \section{Data Exploration}
+
+As it is a reinforcement learning problem, there is no dataset understood in classical way. Instead, I explored mechanics of probles more deeply. For each problem, data about states distribution for was generated using random action selection. There is a need to be careful with this data - for random walking probably, many states will not be visited much often. Hovewer it provides an overwiew.
+
 \subsection{Cart Pole}
 
 Action space is a discrite, finite set $A = \{0,1\}$ where 0 means go left, and 1 go right.
@@ -56,6 +88,11 @@ Space state is a vector of four real values.
 
 Meaning is following: $s_0$ - cart position, $s_1$ cart velocity, $s_2$ - pole angle and $s_4$ - pola angular velocity.
 
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{exploratory_cartpole.png} 
+\centering
+\caption{Cart Pole distribution of $S$ for random agent is somewhere around normal. Simulation runned for 100 episodes.}
+\end{figure}
 
 \subsection{Mountain Car}
 Action space is a discrite, finite set $A = \{0,1,2\}$ wchich means consecutively move accelerate left, do nothing, accelerate right. Space state is a 2-dimensional vector.
@@ -70,6 +107,23 @@ $s_0$ is position and $s_1$ is velocity.
 
 
 
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{exploratory_mountaincar.png} 
+\centering
+\caption{Mountain Car distribution of $S$ for random agent. Simulation runned for 40000 steps.}
+\end{figure}
+
+\subsection{Space size}
+
+Before, I said that space consists of real numbers. Given that, space state size (for both problems) would be uncountably infinite. However, during to machine representation of real numbers it is not exactly true. In typical implementation, \emph{float} can handle one of $2^{52}$ values \footnote{\url{http://stackoverflow.com/a/8875223}}. Storing Q-table for 2 actions and one real-valued state would take:
+
+
+
+\begin{equation}
+|Q| = |S \times A| = |S| \times |A| = 2^{52} \cdot 2 = 2^{53} = 9007199254740992
+\end{equation}
+
+Wchich requires 36 PB of memory. Only for that simple problem. It definetely makes this unsolvable by tabular Q-learning.
 
 //heatmap
 

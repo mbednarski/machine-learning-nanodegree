@@ -123,10 +123,87 @@ Before, I said that space consists of real numbers. Given that, space state size
 |Q| = |S \times A| = |S| \times |A| = 2^{52} \cdot 2 = 2^{53} = 9007199254740992
 \end{equation}
 
-Wchich requires 36 PB of memory. Only for that simple problem. It definetely makes this unsolvable by tabular Q-learning.
+Which requires 36 PB of memory. Only for that simple problem. It definetely makes this unsolvable by tabular Q-learning.
 
-//heatmap
+\section{Algorithms}
 
+Because Q-space ($S \times A$) is infinite in size, it is impossible to use Q lookup table. The idea is to replace Q table with a function $h(s,a) \rightarrow \mathbb{R}$, that will approximate $Q(s, a)$ values. This will be a model for this problem. 
+
+Therefore, the goal is to find a function $h(s, a)$, that will return a Q-value for a given pair  $(s,a)$. 
+\\[12pt]
+This approach allows to:
+\begin{enumerate}
+\item Handle continuous Q-space
+\item Generalize knowledge to unvisited states
+\item Provides robustness – similar Q-states will have similar Q-values
+\end{enumerate}
+
+\subsection{Linear model}
+The most basic model will be to use linear function:
+
+\begin{equation}
+h(s, a) = \sum_i^n f_i(s, a)w_i
+\end{equation}
+
+There is a need to describe $f_i$. As we can see, $h(s,a)$ is a linear combination of $n$ $f_i$ functions. Each $f_i$ function can represent a different feature. Feature in the most simple cases, can be just observations. For example, if Q-space is defined as 
+
+\begin{equation}
+\begin{aligned}
+&S = \mathbb{R}^4 \\
+&A = \{0, 1\} \\
+&Q = S \times A
+\end{aligned}
+\end{equation}
+
+we could create following $f_i$ functions
+
+\begin{equation}
+\begin{aligned}
+&f_0(s, a) = 1 \\
+&f_1(s, a) = s_1 \\
+&f_2(s, a) = s_2 \\
+&f_3(s, a) = s_3 \\
+&f_4(s, a) = s_4 \\
+&f_5(s, a) = a \\
+\end{aligned}
+\end{equation}
+
+
+Phase of creating $f_i$ functions is called \emph{feature engineering}.
+
+Therefore, update rule will be following:
+\begin{equation}
+\begin{aligned}
+\text{err}&=(R(s,a,s')+\gamma V(s',a'))-Q(s,a) \\
+w_i &\leftarrow w_i+\alpha [\text{err}] f_i (s,a)
+\end{aligned}
+\end{equation}
+
+Where V is defined as:
+\begin{equation}
+V(s',a' )=\max_{a'}Q(s',a')
+\end{equation}
+
+After each step, we are updating weights in function approximating values.
+
+Another possibility is to use 2 separate $Q(s,a)$ functions - one per action. In our example that would be separate $Q_a$ for each action:
+
+\begin{equation}
+\begin{aligned}
+&Q(s, a) = Q_a(s) \\
+&Q_1(s) = \sum_i^n f_i(s)w_{1i} \\
+&Q_2(s) = \sum_i^n f_i(s)w_{2i} \\
+\end{aligned}
+\end{equation}
+
+This can be useful because each action have a separate model and they do not interact with each other. I suppose linear model might be not sufficient to handle relations between all possible actions. From the other hand, non-linear model will be more prone to overfitting. 
+
+\subsection{Space discretization using kNN}
+Another approach is to discretize space state. As we cannot store all continuous values...
+
+
+\section{Benchmark}
+dadada
 
 \end{document}
 

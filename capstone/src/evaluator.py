@@ -11,12 +11,12 @@ from monitor import Monitor
 
 # sys.stdout = open(os.devnull, 'w')
 from plotter import Plotter
-from src.hdf5monitor import Hdf5Monitor
-from src.random_agent import RandomAgent
+from hdf5monitor import Hdf5Monitor
+from random_agent import RandomAgent
 
-max_episodes = 4
+max_episodes = 40
 
-env = gym.envs.make("CartPole-v1")
+# env = gym.envs.make("CartPole-v1")
 env = gym.envs.make("MountainCar-v0")
 env.reset()
 
@@ -29,7 +29,7 @@ for i_episode in range(max_episodes):
     observation = env.reset()
     # state = agent.featurize_observation(observation)
 
-    agent.new_episode(i_episode,observation)
+    agent.new_episode(i_episode)
 
     # mon.observe_episode(i_episode, agent.epsilon)
 
@@ -62,5 +62,5 @@ for i_episode in range(max_episodes):
 
 # mon.save(i_episode)
 
-p = Plotter()
-p.plot_epsilon()
+# p = Plotter()
+# p.plot_epsilon()

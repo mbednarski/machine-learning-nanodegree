@@ -23,16 +23,16 @@ class BaseAgent(object):
         self.i_episode = 1
         self.monitor = Hdf5Monitor(env, self)
 
-    def store_episode_stats(self, creward, epsilon, duration, alpha):
-        self.monitor.append_creward(creward)
-        self.monitor.append_epsilon(epsilon)
-        self.monitor.append_episode_len(len(self.monitor.epsilons))
-        # self.monitor.append_duration(duration)
-        # self.monitor.append_epsilon(epsilon)
+    def store_episode_stats(self, creward, epsilon, episode_len, episode_duration, alpha):
+        self.monitor.append('crewards', creward)
+        self.monitor.append('epsilons', epsilon)
+        self.monitor.append('episode_lens', episode_len)
+        self.monitor.append('episode_durations', episode_duration)
+        self.monitor.append('alphas', alpha)
 
     def store_step_stats(self, observation, state):
-        self.monitor.append_observation(observation)
-        self.monitor.append_state(state)
+        self.monitor.append('observations', observation)
+        self.monitor.append('states', state)
 
     def get_parameters(self):
         return self.parameters
@@ -177,7 +177,8 @@ class KNNSARSAAgent(BaseAgent):
             start = time.time()
             total_reward, steps, Q, trace = self.episode(Q, trace)
             duration = time.time() - start
-            self.store_episode_stats(total_reward, epsilon, duration, self.parameters['alpha'])
+            self.store_episode_stats(total_reward, epsilon,i, duration, self.parameters['alpha'],
+                                     )
 
             logging.warn('Episode {:4d} finished in {:4.2f} ({:6.6f} sec./step) with score {}'.format(i, duration, duration / steps, total_reward))
 
@@ -192,9 +193,9 @@ if __name__ == '__main__':
                       np.array([-1.0, -2.0, -1.0, -2.0]),
                       np.array([1.0, 2.0, 1.0, 2.0]))
     p.set_parameters(**{
-        'density': 50,
-        'lambda': 0.8,
-        'k': 10
+        'density': 15,
+        'lambda': 0.95,
+        'k': 4
     })
     p.initialize()
     p.run()

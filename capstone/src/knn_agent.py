@@ -179,7 +179,7 @@ class KNNSARSAAgent(BaseAgent):
             duration = time.time() - start
             self.store_episode_stats(total_reward, epsilon, duration, self.parameters['alpha'])
 
-            logging.warn('Episode {:4d} finished in {:4.2f} with score {}'.format(i, duration, total_reward))
+            logging.warn('Episode {:4d} finished in {:4.2f} ({:6.6f} sec./step) with score {}'.format(i, duration, duration / steps, total_reward))
 
             trace.fill(0)
             self.parameters['epsilon'] *= 0.9
@@ -192,8 +192,9 @@ if __name__ == '__main__':
                       np.array([-1.0, -2.0, -1.0, -2.0]),
                       np.array([1.0, 2.0, 1.0, 2.0]))
     p.set_parameters(**{
-        'density': 5,
-        'lambda': 0.8
+        'density': 50,
+        'lambda': 0.8,
+        'k': 10
     })
     p.initialize()
     p.run()

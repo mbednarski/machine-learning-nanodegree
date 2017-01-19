@@ -18,8 +18,10 @@ class BaseAgent(object):
 
         self.monitor = Hdf5Monitor(env, self)
 
-    def store_episode_stats(self, i_episode, creward):
+    def store_episode_stats(self, i_episode, creward, epsilon):
         self.monitor.append_creward(creward)
+        self.monitor.append_epsilon(epsilon)
+        self.monitor.append_episode_len(len(self.monitor.epsilons))
 
     def store_step_stats(self, observation, state):
         self.monitor.append_observation(observation)
@@ -39,19 +41,25 @@ class KNNSARSAAgent(BaseAgent):
         self.n_features = 4
         self.maxsteps = 1000
         self.maxepisodes = 100
-        self.density = 15
+
+        self.parameters = self.get_default_parameters()
 
         self.epo = 1
-        self.k = 4
 
-        self.statelist = self.create_clasifiers(self.density)
-        self.nn = NearestNeighbors(n_neighbors=self.k)
+        self.statelist = self.create_clasifiers(self.parameters['density'])
+        self.nn = NearestNeighbors(n_neighbors=self.parameters['k'])
         self.nn.fit(self.statelist)
 
         self.monitor.construct()
 
     def get_state_size(self):
         return self.n_features
+
+    def get_default_parameters(self):
+        return {'alpha': 0.3, 'gamma': 0.9, 'k': 4, 'density': 15, 'lambda': 0.95, 'epsilon': 0.0, 'initial_Q': 10.0}
+
+    def set_parameters(self, **kwargs):
+        self.parameters.update(kwargs)
 
     def create_clasifiers(self, density):
         step = 2 / density
@@ -151,15 +159,14 @@ class KNNSARSAAgent(BaseAgent):
     def game(self, maxepisodes):
         actionlist = range(self.n_actions)
 
-
         n_states = self.statelist.shape[0]
-        Q = np.ones((n_states, self.n_actions)) * 10
+        Q = np.ones((n_states, self.n_actions)) * self.parameters['initial_Q']
         trace = np.zeros((n_states, self.n_actions))
-        alpha = 0.3
-        gamma = 0.9
-        lambda_ = 0.95
-        epsilon = 1.00
-        k = 4
+        alpha = self.parameters['alpha']
+        gamma = self.parameters['gamma']
+        lambda_ = self.parameters['lambda']
+        epsilon = self.parameters['epsilon']
+        k = self.parameters['k']
 
         for i in range(maxepisodes):
             # episode
@@ -167,13 +174,13 @@ class KNNSARSAAgent(BaseAgent):
                                                          self.statelist,
                                                          actionlist, k)
 
-            self.store_episode_stats(i, total_reward)
+            self.store_episode_stats(i, total_reward, epsilon)
 
             trace.fill(0)
-            epsilon = epsilon * 0.9
+            self.parameters['epsilon'] *= 0.9
 
 
 if __name__ == '__main__':
     env = gym.envs.make("CartPole-v1")
     p = KNNSARSAAgent(env)
-    p.game(1300)
+    p.game(50000)

@@ -53,6 +53,26 @@ class Hdf5Monitor(object):
         self.states_count = 0
         self.states_size = 0
 
+        # epsilon
+
+        self.epsilons = self.h5file.create_dataset('epsilon',
+                                                  (1,),
+                                                  maxshape=(None,),
+                                                  chunks=True,
+                                                  dtype='f')
+        self.epsilon_count = 0
+        self.epsilon_size = 0
+
+        # epsiode len
+
+        self.episode_lens = self.h5file.create_dataset('episode_len',
+                                                   (1,),
+                                                   maxshape=(None,),
+                                                   chunks=True,
+                                                   dtype='i')
+        self.episode_len_count = 0
+        self.episode_len_size = 0
+
         self.h5file.attrs['created'] = datetime.datetime.now().isoformat()
         self.h5file.attrs['env'] = self.env.spec.id
         self.h5file.attrs['agent'] = self.agent.name
@@ -88,6 +108,20 @@ class Hdf5Monitor(object):
         self.states[self.states_count] = state
         self.states_count += 1
         if not self.states_count % 2:
+            self.h5file.flush()
+
+    def append_epsilon(self, epsilon):
+        self.epsilons.resize((self.epsilon_count + 1,))
+        self.epsilons[self.epsilon_count] = epsilon
+        self.epsilon_count += 1
+        if not self.epsilon_count % 2:
+            self.h5file.flush()
+
+    def append_episode_len(self, ep_len):
+        self.episode_lens.resize((self.episode_len_count + 1,))
+        self.episode_lens[self.episode_len_count] = ep_len
+        self.episode_len_count += 1
+        if not self.episode_len_count % 2:
             self.h5file.flush()
 
 

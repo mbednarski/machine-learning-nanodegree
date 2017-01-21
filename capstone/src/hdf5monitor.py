@@ -55,7 +55,7 @@ class Hdf5Monitor(object):
 
         # epsilon
 
-        self.epsilons = self.h5file.create_dataset('epsilon',
+        self.epsilons = self.h5file.create_dataset('epsilons',
                                                   (1,),
                                                   maxshape=(None,),
                                                   chunks=True,

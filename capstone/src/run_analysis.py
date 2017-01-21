@@ -29,9 +29,18 @@ def make_algorithm_sumamry(fname):
 
         crewards = hf['crewards']
 
+        means = np.zeros(crewards.size)
+        for i in range(1, crewards.size):
+            means[i] = np.mean(crewards[np.max([i-50,0]):i])
+
+
         sns.tsplot(crewards)
+        sns.tsplot(means, color=pal[1])
         sns.plt.show()
 
+        sns.tsplot(hf['epsilons'])
+        sns.plt.title('Epsilon')
+        sns.plt.show()
 
 
 def exploratory_cartpole(fname):
@@ -46,6 +55,7 @@ def exploratory_cartpole(fname):
         for i, ax in enumerate(axes):
             sns.distplot(observations[:,i], ax=ax)
             ax.set_title('$s_{}$'.format(i))
+            ax.set_yscale('log')
 
         fig.savefig('exploratory_cartpole.png', dpi=500)
         # fig.show()
@@ -68,7 +78,8 @@ def exploratory_mountaincar(fname):
         plt.show()
 
 
-make_algorithm_sumamry(r'c:\p\github\machine-learning-nanodegree\capstone\src\monitor\2017-01-19_16_18_25.hdf5')
+make_algorithm_sumamry(r'c:\p\github\machine-learning-nanodegree\capstone\src\monitor\2017-01-21_12_58_13.hdf5')
+exploratory_cartpole(r'c:\p\github\machine-learning-nanodegree\capstone\src\monitor\2017-01-21_12_58_13.hdf5')
 
 #
 # with h5py.File(latestfname, mode='r') as hf:

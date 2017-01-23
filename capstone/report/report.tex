@@ -12,7 +12,7 @@
 \usepackage{graphicx}
 \graphicspath{ {images/} }
 
-
+\DeclareMathOperator*{\argmax}{arg\,max}
 \usepackage{hyperref}
 
 
@@ -198,9 +198,50 @@ Another possibility is to use 2 separate $Q(s,a)$ functions - one per action. In
 
 This can be useful because each action have a separate model and they do not interact with each other. I suppose linear model might be not sufficient to handle relations between all possible actions. From the other hand, non-linear model will be more prone to overfitting. 
 
-\subsection{Space discretization using kNN}
-Another approach is to discretize space state. As we cannot store all continuous values...
+\subsection{Space discretization using kNN and SARSA}
+Another approach is to discretize space state. As we cannot store all continuous values we can discriteze the space. This will reduce size to finite, and allow us to use eg. tabular Q-learning. Howeverw, for this problem I used SARSA (Wchic icn in-policy, in contrast of off-policy qlearning - Ill explain difference later) with kNN.
 
+\subsubsection{Discretization}
+
+First step for kNN-SARSA is to normalize input space. I explain this in senction SECTION NUMBER. At this point, let's assume that state space is normalized into n-dimensional vector of real values in range $(-1, 1)$.
+
+For each dimmension, we place $p$ \emph{nodes}, arranged unformly \footnote{Also other arrang schemes are possible e.g. Gaussian}. Therefore, for $n$ dimensional space, with $p$ nodes and $|A|$ actions we have Q-space with size:
+
+\begin{equation}
+|Q| = n^d \cdot |A|
+\end{equation}
+
+\subsubsection{Acquiring Q-value for a point}
+
+We introduce parameter $k$ just as in normal kNN algoruithm wchit tells how meany nearest neighbpurs we consider. For observed state $s$ we find $k$ nearest nodes (using euclidean distance \footnote{Why we normalize}) and for each of them we compute its infuence on our observed state. $n$ meas a neighbour node.
+
+\begin{equation}
+\forall knn, \quad knn_i = \frac{1}{1+\text{distance}(knn, s)^2}
+\end{equation}
+
+Given that, we transform $knn_i$ values in a way to make them sum up to $1$.
+
+\begin{equation}
+\forall knn, \quad w_i = \frac{knn_i}{\sum knn_i}
+\end{equation}
+
+The $w$ values, becomes weights how much each neighbour node is affecting observed state. Given that q-value for action $a$ in observed state $s$ is:
+
+\begin{equation}
+V(a, s) = \sum_{knn} Q(knn, a)w_i
+\end{equation}
+
+\subsubsection{Choosing action}
+
+Action to perform is selected by computing $V(a, s)$ for each action $a$ in observed state $s$ and choosing one wiht highest value.
+
+\begin{equation}
+\argmax_a V(a, s)
+\end{equation}
+
+There is no $\epsilon$ because for exploration-exploitation I use optimistic inital Q-values.
+
+\subsubsection{Learning}
 
 \section{Benchmark}
 dadada

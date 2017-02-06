@@ -14,13 +14,15 @@ from plotter import Plotter
 from hdf5monitor import Hdf5Monitor
 from random_agent import RandomAgent
 
+from knn_agent import KNNAgent
+
 max_episodes = 40
 
-# env = gym.envs.make("CartPole-v1")
-env = gym.envs.make("MountainCar-v0")
+env = gym.envs.make("CartPole-v1")
+# env = gym.envs.make("MountainCar-v0")
 env.reset()
 
-agent = RandomAgent(env)
+agent = KNNAgent(env)
 
 # mon = Monitor(max_episodes, observation_size=4)
 mon = Hdf5Monitor(env, agent, 4)
@@ -29,7 +31,7 @@ for i_episode in range(max_episodes):
     observation = env.reset()
     # state = agent.featurize_observation(observation)
 
-    agent.new_episode(i_episode)
+    agent.new_episode(i_episode, observation)
 
     # mon.observe_episode(i_episode, agent.epsilon)
 
@@ -40,14 +42,14 @@ for i_episode in range(max_episodes):
 
         action = agent.get_action(observation)
         next_observation, reward, done, _ = env.step(action)
-        agent.learn(observation, next_observation, action, reward)
+        agent.learn(observation, next_observation, action, reward, done)
 
         # mon.observe_step(i_episode, observation, next_observation, action, reward)
 
         mon.append_observation(observation)
         mon.append_action(action)
 
-        observation = next_observation
+        # observation = next_observation
 
         # if i_episode % 75 == 0:
         #     env.render()

@@ -26,7 +26,7 @@ def create_clasifiers():
     return xy
 
 
-env = gym.envs.make("CartPole-v0")
+env = gym.envs.make("CartPole-v1")
 
 
 def getkNNSet(state, statelist, k):

@@ -190,12 +190,16 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     env = gym.envs.make("CartPole-v1")
     p = KNNSARSAAgent(env,
-                      np.array([-1.0, -2.0, -1.0, -2.0]),
-                      np.array([1.0, 2.0, 1.0, 2.0]))
+                      np.array([-0.95593077, -3.2742672,  -0.24515077, -2.10042572]),
+                      np.array([ 2.4395082,   3.21788216,  0.2585552,   3.67279315]),
+                      # np.array([-1.0, -2.0, -1.0, -2.0]),
+                      # np.array([1.0, 2.0, 1.0, 2.0]),
+                      max_episodes=200
+                      )
     p.set_parameters(**{
-        'density': 15,
+        'density': 10,
         'lambda': 0.95,
-        'k': 4
+        'k': 10
     })
     p.initialize()
     p.run()

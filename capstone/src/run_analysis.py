@@ -30,17 +30,23 @@ def make_algorithm_sumamry(fname):
         crewards = hf['crewards']
 
         means = np.zeros(crewards.size)
+        means2 = np.zeros(crewards.size)
         for i in range(1, crewards.size):
             means[i] = np.mean(crewards[np.max([i-50,0]):i])
+            means2[i] = np.mean(crewards[np.max([i-150,0]):i])
 
 
-        sns.tsplot(crewards)
+        sns.tsplot(crewards[:,0])
         sns.tsplot(means, color=pal[1])
+        sns.tsplot(means2, color=pal[2])
+        sns.plt.savefig('algo_res.png', dpi=500)
         sns.plt.show()
 
-        sns.tsplot(hf['epsilons'])
+        sns.tsplot(hf['epsilons'][:,0])
         sns.plt.title('Epsilon')
         sns.plt.show()
+
+
 
 
 def exploratory_cartpole(fname):
@@ -57,29 +63,35 @@ def exploratory_cartpole(fname):
             ax.set_title('$s_{}$'.format(i))
             ax.set_yscale('log')
 
+        print('Minimal values of s: {}'.format(np.min(observations, axis=0)))
+        print('maximal values of s: {}'.format(np.max(observations, axis=0)))
+
+        # fig.title('Cartpole exploratory')
         fig.savefig('exploratory_cartpole.png', dpi=500)
         # fig.show()
         plt.show()
 
 
 def exploratory_mountaincar(fname):
+    print('Exploratory analysis for file ' + fname)
     with h5py.File(fname, mode='r') as hf:
         for k, v in six.iteritems(hf.attrs):
             print('{}: {}'.format(k, v))
 
         observations = hf['observations']
+        print('# of observations: {}'.format(observations.shape[0]))
 
-        x1 = pd.Series(observations[:40000, 0], name='$s_1$')
-        x2 = pd.Series(observations[:40000, 1], name='$s_2$')
+        x1 = pd.Series(observations[:, 0].sample(40000), name='$s_1$')
+        x2 = pd.Series(observations[:, 1].sample(40000), name='$s_2$')
         fig = sns.jointplot(x1, x2, kind='kde')
 
         fig.savefig('exploratory_mountaincar.png', dpi=500)
         # fig.show()
         plt.show()
 
-
-make_algorithm_sumamry(r'c:\p\github\machine-learning-nanodegree\capstone\src\monitor\2017-01-21_12_58_13.hdf5')
-exploratory_cartpole(r'c:\p\github\machine-learning-nanodegree\capstone\src\monitor\2017-01-21_12_58_13.hdf5')
+cartpole_file = r'c:\p\github\machine-learning-nanodegree\capstone\src\monitor\2017-02-07_17_12_51.hdf5'
+make_algorithm_sumamry(cartpole_file )
+exploratory_cartpole(cartpole_file )
 
 #
 # with h5py.File(latestfname, mode='r') as hf:

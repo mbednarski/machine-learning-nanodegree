@@ -47,8 +47,10 @@ There is a frictionless track, and a vehicle attached to it. Vehicle can move le
 
 Simulation ends either when pole is deviated over $15\degree$ from vertical or cart is 2.4 units away from the center of the track.
 
+Environment is solved when pole is keeped for 200 time steps.
+
 \begin{figure}[h]
-\includegraphics[width=\textwidth]{cartpole_intro.png} 
+\includegraphics[width=0.5\textwidth]{cartpole_intro.png} 
 \centering
 \caption{The Cart Pole environment from OpenAI.}
 \end{figure}
@@ -68,11 +70,14 @@ The only reward of -1 is given every timestep. There is no reward on approach to
 
 \subsection{Evaluation metric}
 
-For measuring perfomance I will use moving average of cumulative reward of last 100 episodes.
+For measuring perfomance I will use moving average of cumulative reward for last 100 episodes.
+
+\section{Changes against proposal}
+TBD
 
 \section{Data Exploration}
 
-As it is a reinforcement learning problem, there is no dataset understood in classical way. Instead, I explored mechanics of probles more deeply. For each problem, data about states distribution for was generated using random action selection. There is a need to be careful with this data - for random walking probably, many states will not be visited much often. Hovewer it provides an overwiew.
+As it is a reinforcement learning problem, there is no dataset understood in classical way. Instead, I explored mechanics of problems more deeply. For each problem, data about states distribution for was generated using random action selection. There is a need to be careful with this data - for random walking probably, many states will not be visited much often. Hovewer it provides an overwiew.
 
 \subsection{Cart Pole}
 
@@ -88,11 +93,6 @@ Space state is a vector of four real values.
 
 Meaning is following: $s_0$ - cart position, $s_1$ cart velocity, $s_2$ - pole angle and $s_4$ - pola angular velocity.
 
-\begin{figure}[h]
-\includegraphics[width=\textwidth]{exploratory_cartpole.png} 
-\centering
-\caption{Cart Pole distribution of $S$ for random agent is somewhere around normal. Simulation runned for 100 episodes.}
-\end{figure}
 
 \subsection{Mountain Car}
 Action space is a discrite, finite set $A = \{0,1,2\}$ wchich means consecutively move accelerate left, do nothing, accelerate right. Space state is a 2-dimensional vector.
@@ -105,7 +105,13 @@ Action space is a discrite, finite set $A = \{0,1,2\}$ wchich means consecutivel
 
 $s_0$ is position and $s_1$ is velocity.
 
+\subsection{Visualization}
 
+\begin{figure}[h]
+\includegraphics[width=\textwidth]{exploratory_cartpole.png} 
+\centering
+\caption{Cart Pole distribution of $S$ for random agent is somewhere around normal. Simulation runned for 100 episodes.}
+\end{figure}
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{exploratory_mountaincar.png} 
@@ -127,9 +133,7 @@ Which requires 36 PB of memory. Only for that simple problem. It definetely make
 
 \section{Algorithms}
 
-Because Q-space ($S \times A$) is infinite in size, it is impossible to use Q lookup table. The idea is to replace Q table with a function $h(s,a) \rightarrow \mathbb{R}$, that will approximate $Q(s, a)$ values. This will be a model for this problem. 
-
-Therefore, the goal is to find a function $h(s, a)$, that will return a Q-value for a given pair  $(s,a)$. 
+Because Q-space ($S \times A$) is infinite in size, it is impossible to use Q lookup table. There are at least two approaches to deal wit this problem. First, is to replace Q table with a function $h(s,a) \rightarrow \mathbb{R}$, that will approximate $Q(s, a)$ values. Therefore, the goal is to find a function $h(s, a)$, that will return a Q-value for a given pair $(s,a)$. The second one, is to discretize continuous space. Both of them were implemented.
 \\[12pt]
 This approach allows to:
 \begin{enumerate}
@@ -174,8 +178,8 @@ Phase of creating $f_i$ functions is called \emph{feature engineering}.
 Therefore, update rule will be following:
 \begin{equation}
 \begin{aligned}
-\text{err}&=(R(s,a,s')+\gamma V(s',a'))-Q(s,a) \\
-w_i &\leftarrow w_i+\alpha [\text{err}] f_i (s,a)
+\delta&=(R(s,a,s')+\gamma V(s',a'))-Q(s,a) \\
+w_i &\leftarrow w_i+\alpha \delta f_i (s,a)
 \end{aligned}
 \end{equation}
 
@@ -184,7 +188,7 @@ Where V is defined as:
 V(s',a' )=\max_{a'}Q(s',a')
 \end{equation}
 
-After each step, we are updating weights in function approximating values.
+After each step, we are updating weights in function approximating q-values.
 
 Another possibility is to use 2 separate $Q(s,a)$ functions - one per action. In our example that would be separate $Q_a$ for each action:
 
@@ -196,22 +200,22 @@ Another possibility is to use 2 separate $Q(s,a)$ functions - one per action. In
 \end{aligned}
 \end{equation}
 
-This can be useful because each action have a separate model and they do not interact with each other. I suppose linear model might be not sufficient to handle relations between all possible actions. From the other hand, non-linear model will be more prone to overfitting. 
+This can be useful because each action have a separate model and they will not interact with each other. I suppose linear model might be not sufficient to handle relations between all possible actions. From the other hand, non-linear model will be more prone to overfitting. However, there is possibility to use engineered features in order to make linear model perform better. This was implemented in project. More details in preprocessing section. 
 
 \subsection{Space discretization using kNN and SARSA}
-Another approach is to discretize space state. As we cannot store all continuous values we can discriteze the space. This will reduce size to finite, and allow us to use eg. tabular Q-learning. Howeverw, for this problem I used SARSA (Wchic icn in-policy, in contrast of off-policy qlearning - Ill explain difference later) with kNN.
+Another approach is to discretize space state. As we cannot store all continuous values we can discriteze the space. This will reduce size to finite, and allow us to use eg. tabular Q-learning. However, for this problem I used SARSA (Which is on-policy, in contrast of off-policy qlearning - I'll explain difference later) with kNN.
 
 \subsubsection{Discretization}
 
-First step for kNN-SARSA is to normalize input space. I explain this in senction SECTION NUMBER. At this point, let's assume that state space is normalized into n-dimensional vector of real values in range $(-1, 1)$.
+First step for kNN-SARSA is to normalize input space. I explain this in preprocessing section. At this point, let's assume that state space is normalized into d-dimensional vector of real values in range $(-1, 1)$.
 
-For each dimmension, we place $p$ \emph{nodes}, arranged unformly \footnote{Also other arrang schemes are possible e.g. Gaussian}. Therefore, for $n$ dimensional space, with $p$ nodes and $|A|$ actions we have Q-space with size:
+For each dimmension, we place $p$ \emph{nodes}, arranged unformly \footnote{Also other arrange schemes are possible e.g. Gaussian}. Therefore, for $n$ dimensional space, with $p$ nodes and $|A|$ actions we have Q-space with size:
 
 \begin{equation}
-|Q| = n^d \cdot |A|
+|Q| = p^d \cdot |A|
 \end{equation}
 
-\subsubsection{Acquiring Q-value for a point}
+\subsubsection{Acquiring Q-value for a q-state}
 
 We introduce parameter $k$ just as in normal kNN algoruithm wchit tells how meany nearest neighbpurs we consider. For observed state $s$ we find $k$ nearest nodes (using euclidean distance \footnote{Why we normalize}) and for each of them we compute its infuence on our observed state. $n$ meas a neighbour node.
 

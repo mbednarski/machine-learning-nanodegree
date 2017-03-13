@@ -37,12 +37,10 @@ class Hdf5Monitor(object):
         self.add_collection('observations', self.env.observation_space.shape[0])
         self.add_collection('actions', 1, dtype='i')
         self.add_collection('crewards', 1)
-        self.add_collection('states', self.agent.get_state_size())
         self.add_collection('epsilons', 1, 'f')
         self.add_collection('alphas', 1, 'f')
         self.add_collection('episode_lens', 1, 'i')
         self.add_collection('episode_durations', 1, 'f')
-
 
         self.h5file.attrs['created'] = datetime.datetime.now().isoformat()
         self.h5file.attrs['env'] = self.env.spec.id
@@ -51,4 +49,3 @@ class Hdf5Monitor(object):
         self.h5file.attrs.update(self.agent.get_parameters())
 
         self.h5file.flush()
-

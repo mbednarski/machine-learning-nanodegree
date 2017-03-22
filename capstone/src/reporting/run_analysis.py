@@ -53,7 +53,7 @@ def exploratory_cartpole(fname):
         for i, ax in enumerate(axes):
             sns.distplot(observations[:, i], ax=ax)
             ax.set_title('$s_{}$'.format(i))
-            ax.set_yscale('log')
+            # ax.set_yscale('log')
 
         print('Minimal values of s: {}'.format(np.min(observations, axis=0)))
         print('maximal values of s: {}'.format(np.max(observations, axis=0)))
@@ -73,13 +73,13 @@ def exploratory_mountaincar(fname):
         observations = hf['observations']
         print('# of observations: {}'.format(observations.shape[0]))
 
-        x1 = pd.Series(observations[:, 0], name='$s_1$')
-        x2 = pd.Series(observations[:, 1], name='$s_2$')
+        x1 = pd.Series(observations[:10000, 0], name='$s_1$')
+        x2 = pd.Series(observations[:10000, 1], name='$s_2$')
         fig = sns.jointplot(x1, x2, kind='kde')
 
         fig.savefig('exploratory_mountaincar.png', dpi=400)
         plt.show()
 
 if __name__ == '__main__':
-    # exploratory_cartpole('data/random_cartpole.hdf5')
-    exploratory_mountaincar('data/random_mountaincar.hdf5')
+    exploratory_cartpole('data/random_cartpole.hdf5')
+    # exploratory_mountaincar('data/random_mountaincar.hdf5')

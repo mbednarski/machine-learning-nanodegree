@@ -4,6 +4,7 @@
 \usepackage{textcomp}
 \usepackage{mathtools}
 \usepackage{amssymb}
+\usepackage{todonotes}
 \title{Machine Learning Engineer Nanodegree Capstone Project}
 \author{Mateusz Bednarski}
 \date{\today}
@@ -70,18 +71,19 @@ The only reward of -1 is given every timestep. There is no reward on approach to
 
 \subsection{Evaluation metric}
 
-For measuring perfomance I will use moving average of cumulative reward for last 100 episodes.
+For measuring performance I will use moving average of cumulative reward for last 100 episodes.
 
 \section{Changes against proposal}
 TBD
 
-\section{Data Exploration}
+\section{Analysis}
+\subsection{Data Exploration}
 
-As it is a reinforcement learning problem, there is no dataset understood in classical way. Instead, I explored mechanics of problems more deeply. For each problem, data about states distribution for was generated using random action selection. There is a need to be careful with this data - for random walking probably, many states will not be visited much often. Hovewer it provides an overwiew.
+As it is a reinforcement learning problem, there is no dataset understood in classical way. Instead, I explored mechanics of problems more deeply. For each problem, data about states distribution for was generated using random action selection. There is a need to be careful with this data - for random walking probably, many states will not be visited much often. However it provides an overview.
 
-\subsection{Cart Pole}
+\subsubsection{Cart Pole}
 
-Action space is a discrite, finite set $A = \{0,1\}$ where 0 means go left, and 1 go right.
+Action space is a discrete, finite set $A = \{0,1\}$ where 0 means go left, and 1 go right.
 Space state is a vector of four real values. 
 \begin{multline}
  S = (s_0, s_1, s_2, s_3) \in \mathbb{R}^4 \\
@@ -94,7 +96,7 @@ Space state is a vector of four real values.
 Meaning is following: $s_0$ - cart position, $s_1$ cart velocity, $s_2$ - pole angle and $s_4$ - pola angular velocity.
 
 
-\subsection{Mountain Car}
+\subsubsection{Mountain Car}
 Action space is a discrite, finite set $A = \{0,1,2\}$ wchich means consecutively move accelerate left, do nothing, accelerate right. Space state is a 2-dimensional vector.
 
 \begin{multline*}
@@ -105,7 +107,7 @@ Action space is a discrite, finite set $A = \{0,1,2\}$ wchich means consecutivel
 
 $s_0$ is position and $s_1$ is velocity.
 
-\subsection{Visualization}
+\subsubsection{Visualization}
 
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{exploratory_cartpole.png} 
@@ -116,7 +118,7 @@ $s_0$ is position and $s_1$ is velocity.
 \begin{figure}[h]
 \includegraphics[width=\textwidth]{exploratory_mountaincar.png} 
 \centering
-\caption{Mountain Car distribution of $S$ for random agent. Simulation runned for 40000 steps.}
+\caption{Mountain Car distribution of $S$ for random agent. Simulation runned for 10000 steps.}
 \end{figure}
 
 \subsection{Space size}
@@ -131,7 +133,7 @@ Before, I said that space consists of real numbers. Given that, space state size
 
 Which requires 36 PB of memory. Only for that simple problem. It definetely makes this unsolvable by tabular Q-learning.
 
-\section{Algorithms}
+\subsection{Algorithms}
 
 Because Q-space ($S \times A$) is infinite in size, it is impossible to use Q lookup table. There are at least two approaches to deal wit this problem. First, is to replace Q table with a function $h(s,a) \rightarrow \mathbb{R}$, that will approximate $Q(s, a)$ values. Therefore, the goal is to find a function $h(s, a)$, that will return a Q-value for a given pair $(s,a)$. The second one, is to discretize continuous space. Both of them were implemented.
 \\[12pt]
@@ -173,7 +175,7 @@ we could create following $f_i$ functions
 \end{equation}
 
 
-Phase of creating $f_i$ functions is called \emph{feature engineering}.
+Phase of creating $f_i$ functions is called \emph{feature engineering}. Used features are described in detail in section data preprocessing.
 
 Therefore, update rule will be following:
 \begin{equation}
@@ -217,7 +219,7 @@ For each dimmension, we place $p$ \emph{nodes}, arranged unformly \footnote{Also
 
 \subsubsection{Acquiring Q-value for a q-state}
 
-We introduce parameter $k$ just as in normal kNN algoruithm wchit tells how meany nearest neighbpurs we consider. For observed state $s$ we find $k$ nearest nodes (using euclidean distance \footnote{Why we normalize}) and for each of them we compute its infuence on our observed state. $n$ meas a neighbour node.
+We introduce parameter $k$ just as in normal kNN algorithm witch tells how meany nearest neighbors we consider. For observed state $s$ we find $k$ nearest nodes (using euclidean distance \footnote{Why we normalize}) and for each of them we compute its influence on our observed state. $n$ menas a neighbor node.
 
 \begin{equation}
 \forall knn, \quad knn_i = \frac{1}{1+\text{distance}(knn, s)^2}
@@ -229,7 +231,7 @@ Given that, we transform $knn_i$ values in a way to make them sum up to $1$.
 \forall knn, \quad w_i = \frac{knn_i}{\sum knn_i}
 \end{equation}
 
-The $w$ values, becomes weights how much each neighbour node is affecting observed state. Given that q-value for action $a$ in observed state $s$ is:
+The $w$ values, becomes weights how much each neighbor node is affecting observed state. Given that q-value for action $a$ in observed state $s$ is:
 
 \begin{equation}
 V(a, s) = \sum_{knn} Q(knn, a)w_i
@@ -243,12 +245,21 @@ Action to perform is selected by computing $V(a, s)$ for each action $a$ in obse
 \argmax_a V(a, s)
 \end{equation}
 
-There is no $\epsilon$ because for exploration-exploitation I use optimistic inital Q-values.
+There is no $\epsilon$ because for exploration-exploitation I use optimistic initial Q-values.
+
+\subsubsection{On-policy learning}
+
+\todoin{Explain the difference}
+
+\subsubsection{Eligibility traces}
+
+\todoin{Describe}
 
 \subsubsection{Learning}
 
-\section{Benchmark}
-dadada
+\subsection{Benchmark}
+
+Select result to compare.
 
 \end{document}
 

@@ -249,17 +249,35 @@ There is no $\epsilon$ because for exploration-exploitation I use optimistic ini
 
 \subsubsection{On-policy learning}
 
-\todoin{Explain the difference}
+SARSA is a on-policy method. It does mean that it updates q-values using value of $s'$ and current policy '$a''$. Estimations are done assuming current policy will be followed.
 
 \subsubsection{Eligibility traces}
 
-\todoin{Describe}
+For this algorithm el
 
 \subsubsection{Learning}
 
 \subsection{Benchmark}
 
 Select result to compare.
+
+\section{Methodology}
+\subsection{Data Preprocessing}
+\subsubsection{Linear Model}
+\subsubsection{State space discretization}
+
+SARSA kNN assumes that states are in range $[-1;1]$ but as shown in section Data Exploration space state for both problems does not statisfy this assumption. In order to transform space state, following algorithm was used.
+
+\begin{equation}
+\begin{aligned}
+&i={0,1,\ldots, d-1} \\
+&x_i = \frac{s_i - \min(s_1)}{\max(s_i) - \min(s_i)} - 1
+\end{aligned}
+\end{equation}
+
+Where $d$ is dimensionality of original space state, $s_i$ is an element of a state vector, $x_i$ is the same element preprocessed.
+
+This must be done before running agent. For Mountain Car bounds for states are well-defined. For Cart pole they are not. In order to find max and min, from visited states was collected and algorithm was re-launched with updated min and max.
 
 \end{document}
 

@@ -9,9 +9,8 @@ from sklearn.neighbors import NearestNeighbors
 
 import logging
 
-
+from base_agent import BaseAgent
 from hdf5monitor import Hdf5Monitor
-
 
 
 
@@ -38,13 +37,14 @@ class KNNSARSAAgent(BaseAgent):
         logging.warn('Initialized in {:4.2f} seconds'.format(duration))
 
     def run(self):
-        self.game()
+        return self.game()
 
     def get_state_size(self):
         return self.n_features
 
     def get_default_parameters(self):
-        return {'alpha': 0.3, 'gamma': 0.9, 'k': 4, 'density': 15, 'lambda': 0.95, 'epsilon': 0.0, 'initial_Q': 10.0}
+        return {'alpha': 0.3, 'gamma': 0.9, 'k': 4, 'density': 15, 'lambda': 0.95, 'epsilon': 0.0, 'initial_Q': 10.0,
+                't': 100.0, 't_decay': 0.99}
 
     def set_parameters(self, **kwargs):
         self.parameters.update(kwargs)
@@ -53,7 +53,8 @@ class KNNSARSAAgent(BaseAgent):
         step = 2.0 / self.parameters['density']
         frm = -1.
         to = 1.001
-        xy = np.mgrid[frm:to:step, frm:to:step].reshape(self.n_features, -1).T
+        # xy = np.mgrid[frm:to:step, frm:to:step].reshape(self.n_features, -1).T
+        xy = np.mgrid[frm:to:step, frm:to:step, frm:to:step, frm:to:step].reshape(self.n_features, -1).T
         return xy
 
     def getkNNSet(self, state):
@@ -74,12 +75,22 @@ class KNNSARSAAgent(BaseAgent):
         return a
 
     def e_greedy_selection(self, V):
-        action_size = V.shape[0]
-        if random.random() > self.parameters['epsilon']:
-            a = self.getBestAction(V)
-        else:
-            a = random.choice(range(action_size))
-        return a
+        probs = np.divide(
+            np.exp(np.divide(V,self.parameters['t'] )),
+            np.sum(
+                np.exp(np.divide(V, self.parameters['t'] ))
+            )
+        )
+        return np.random.choice(range(probs.shape[0]), p=probs)
+        #
+        # action_size = V.shape[0]
+        # if random.random() > self.parameters['epsilon']:
+        #     a = self.getBestAction(V)
+        # else:
+        #     a = random.choice(range(action_size))
+        # return a
+
+
 
     def update(self, Q, V, V2, knn, p, r, a, ap, trace, done):
         trace[knn, :] = 0.0
@@ -132,7 +143,7 @@ class KNNSARSAAgent(BaseAgent):
 
             steps += 1
 
-            self.store_step_stats(next_observation, state)
+            self.store_step_stats(next_observation)
 
             # self.env.render()
             if done:
@@ -147,6 +158,8 @@ class KNNSARSAAgent(BaseAgent):
         trace = np.zeros((n_states, self.n_actions))
         epsilon = self.parameters['epsilon']
 
+        ep_mean_scores = np.zeros(self.max_episodes)
+
         for i in range(self.max_episodes):
             # episode
             self.i_episode = i
@@ -156,27 +169,61 @@ class KNNSARSAAgent(BaseAgent):
             duration = time.time() - start
             self.store_episode_stats(total_reward, epsilon,i, duration, self.parameters['alpha'],
                                      )
+            ep_mean_scores[i] = total_reward
 
-            logging.warn('Episode {:4d} finished in {:4.2f} ({:6.6f} sec./step) with score {}'.format(i, duration, duration / steps, total_reward))
+            if i == 499:
+                logging.warn('Episode {:4d} finished in {:4.2f} ({:6.6f} sec./step) temp: {} with score {}'.format(i, duration, duration / steps, self.parameters['t'], total_reward))
 
             trace.fill(0)
             self.parameters['epsilon'] *= 0.9
-
+            self.parameters['t'] *= self.parameters['t_decay']
+            if self.parameters['t'] < 0.15:
+                self.parameters['t'] = 0.15
+        return np.mean(ep_mean_scores[-250:])
 
 if __name__ == '__main__':
+
+    np.random.seed(1)
+    # def mountaincar_knn():
+    # 	print('Evaluating CartPole with kNNAgent')
+    # 	env = gym.envs.make("MountainCar-v0")
+    # 	p = KNNSARSAAgent(env,
+    # 					  np.array([-1.2, -0.07]),
+    # 					  np.array([0.6, 0.07]),
+    # 					  max_episodes=2000,
+    # 					  max_steps=150000
+    # 					  )
+    # 	p.set_parameters(**{
+    # 		'density': 20,
+    # 		'lambda': 0.95,
+    # 		'gamma': 0.99,
+    # 		'k': 6
+    # 	})
+    # 	p.initialize()
+    # 	p.run()
+
+    # mountaincar_knn()
+
     logging.basicConfig(level=logging.DEBUG)
     env = gym.envs.make("CartPole-v1")
+    env = gym.wrappers.Monitor(env, '/tmp/cartpolev1-ex-2', force=True)
     p = KNNSARSAAgent(env,
-                      np.array([-2.45593077, -3.2742672,  -0.24515077, -2.90042572]),
-                      np.array([ 2.4395082,   3.21788216,  0.2585552,   3.67279315]),
+                      # np.array([-4.0, -3.2742672, -0.42, -3.60042572]),
+                      # np.array([4.0, 3.21788216, 0.42, 3.67279315]),
+                      np.array([-0.95593077, -3.2742672, -0.24515077, -2.10042572]),
+                      np.array([2.4395082, 3.21788216, 0.2585552, 3.67279315]),
                       # np.array([-1.0, -2.0, -1.0, -2.0]),
                       # np.array([1.0, 2.0, 1.0, 2.0]),
-                      max_episodes=200
+                      max_episodes=1500
                       )
     p.set_parameters(**{
-        'density': 10,
+    'initial_Q': 10.0,
+        'gamma': 0.99,
+        'alpha': 0.33,
+        'density': 15,
         'lambda': 0.95,
-        'k': 10
+        'k': 4
     })
     p.initialize()
     p.run()
+    env.close()

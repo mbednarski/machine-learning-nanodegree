@@ -32,7 +32,7 @@ class BaseAgent(object):
 
     def store_step_stats(self, observation, state):
         self.monitor.append('observations', observation)
-        self.monitor.append('states', state)
+        # self.monitor.append('states', state)
 
     def get_parameters(self):
         return self.parameters
@@ -188,7 +188,7 @@ class KNNSARSAAgent(BaseAgent):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    env = gym.envs.make("CartPole-v1")
+    env = gym.envs.make("CartPole-v0")
     p = KNNSARSAAgent(env,
                       np.array([-0.95593077, -3.2742672,  -0.24515077, -2.10042572]),
                       np.array([ 2.4395082,   3.21788216,  0.2585552,   3.67279315]),
@@ -197,6 +197,7 @@ if __name__ == '__main__':
                       max_episodes=200
                       )
     p.set_parameters(**{
+        'alpha'
         'density': 10,
         'lambda': 0.95,
         'k': 10

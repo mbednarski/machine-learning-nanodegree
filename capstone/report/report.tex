@@ -97,127 +97,20 @@ Which requires $9 \cdot 10^{89}$ PB of memory. Also, each state should be visite
 
 \subsection{Algorithms}
 
-Because Q-space ($S \times A$) is infinite in size, it is impossible to use Q lookup table. There are at least two approaches to deal wit this problem. First, is to replace Q table with a function $h(s,a) \rightarrow \mathbb{R}$, that will approximate $Q(s, a)$ values. Therefore, the goal is to find a function $h(s, a)$, that will return a Q-value for a given pair $(s,a)$. The second one, is to discretize continuous space. Both of them were implemented.
-\\[12pt]
-This approach allows to:
-\begin{enumerate}
-\item Handle continuous Q-space
-\item Generalize knowledge to unvisited states
-\item Provides robustness – similar Q-states will have similar Q-values
-\end{enumerate}
+Because Q-space ($S \times A$) is infinite in size, it is impossible to use Q lookup table. There are many approaches to deal with this problem. There are at least two approaches to deal wit this problem. First, is to replace Q table with a function $h(s,a) \rightarrow \mathbb{R}$, that will approximate $Q(s, a)$ values. Therefore, the goal is to find a function $h(s, a)$, that will return a Q-value for a given pair $(s,a)$. Another one, is to discretize continuous space. Hovewer, I decided to use completely different approach.
 
-\subsection{Linear model}
-The most basic model will be to use linear function:
+\subsection{Parameter-exploring Policy Gradient}
+Instead of using techniques that are focused on searching function approximating qvalues, PEPG uses \emph{policy space}. Ultimate goal is to find a policy that will solve the environment. This algorithms search  the policy space in order to find such one. \todo{source}
+
+PEPG is a policy gradient method, it does mean that it estimates policy gradient and use it to maximize rewards given by following a policy.
+
+For first, we define a parametrized policy $\pi_\theta$
 
 \begin{equation}
-h(s, a) = \sum_i^n f_i(s, a)w_i
-\end{equation}
-
-There is a need to describe $f_i$. As we can see, $h(s,a)$ is a linear combination of $n$ $f_i$ functions. Each $f_i$ function can represent a different feature. Feature in the most simple cases, can be just observations. For example, if Q-space is defined as 
-
-\begin{equation}
-\begin{aligned}
-&S = \mathbb{R}^4 \\
-&A = \{0, 1\} \\
-&Q = S \times A
-\end{aligned}
-\end{equation}
-
-we could create following $f_i$ functions
-
-\begin{equation}
-\begin{aligned}
-&f_0(s, a) = 1 \\
-&f_1(s, a) = s_1 \\
-&f_2(s, a) = s_2 \\
-&f_3(s, a) = s_3 \\
-&f_4(s, a) = s_4 \\
-&f_5(s, a) = a \\
-\end{aligned}
+$\pi_\theta: s \rightarrow a$
 \end{equation}
 
 
-Phase of creating $f_i$ functions is called \emph{feature engineering}. Used features are described in detail in section data preprocessing.
-
-Therefore, update rule will be following:
-\begin{equation}
-\begin{aligned}
-\delta&=(R(s,a,s')+\gamma V(s',a'))-Q(s,a) \\
-w_i &\leftarrow w_i+\alpha \delta f_i (s,a)
-\end{aligned}
-\end{equation}
-
-Where V is defined as:
-\begin{equation}
-V(s',a' )=\max_{a'}Q(s',a')
-\end{equation}
-
-After each step, we are updating weights in function approximating q-values.
-
-Another possibility is to use 2 separate $Q(s,a)$ functions - one per action. In our example that would be separate $Q_a$ for each action:
-
-\begin{equation}
-\begin{aligned}
-&Q(s, a) = Q_a(s) \\
-&Q_1(s) = \sum_i^n f_i(s)w_{1i} \\
-&Q_2(s) = \sum_i^n f_i(s)w_{2i} \\
-\end{aligned}
-\end{equation}
-
-This can be useful because each action have a separate model and they will not interact with each other. I suppose linear model might be not sufficient to handle relations between all possible actions. From the other hand, non-linear model will be more prone to overfitting. However, there is possibility to use engineered features in order to make linear model perform better. This was implemented in project. More details in preprocessing section. 
-
-\subsection{Space discretization using kNN and SARSA}
-Another approach is to discretize space state. As we cannot store all continuous values we can discriteze the space. This will reduce size to finite, and allow us to use eg. tabular Q-learning. However, for this problem I used SARSA (Which is on-policy, in contrast of off-policy qlearning - I'll explain difference later) with kNN.
-
-\subsubsection{Discretization}
-
-First step for kNN-SARSA is to normalize input space. I explain this in preprocessing section. At this point, let's assume that state space is normalized into d-dimensional vector of real values in range $(-1, 1)$.
-
-For each dimmension, we place $p$ \emph{nodes}, arranged unformly \footnote{Also other arrange schemes are possible e.g. Gaussian}. Therefore, for $n$ dimensional space, with $p$ nodes and $|A|$ actions we have Q-space with size:
-
-\begin{equation}
-|Q| = p^d \cdot |A|
-\end{equation}
-
-\subsubsection{Acquiring Q-value for a q-state}
-
-We introduce parameter $k$ just as in normal kNN algorithm witch tells how meany nearest neighbors we consider. For observed state $s$ we find $k$ nearest nodes (using euclidean distance \footnote{Why we normalize}) and for each of them we compute its influence on our observed state. $n$ menas a neighbor node.
-
-\begin{equation}
-\forall knn, \quad knn_i = \frac{1}{1+\text{distance}(knn, s)^2}
-\end{equation}
-
-Given that, we transform $knn_i$ values in a way to make them sum up to $1$.
-
-\begin{equation}
-\forall knn, \quad w_i = \frac{knn_i}{\sum knn_i}
-\end{equation}
-
-The $w$ values, becomes weights how much each neighbor node is affecting observed state. Given that q-value for action $a$ in observed state $s$ is:
-
-\begin{equation}
-V(a, s) = \sum_{knn} Q(knn, a)w_i
-\end{equation}
-
-\subsubsection{Choosing action}
-
-Action to perform is selected by computing $V(a, s)$ for each action $a$ in observed state $s$ and choosing one wiht highest value.
-
-\begin{equation}
-\argmax_a V(a, s)
-\end{equation}
-
-There is no $\epsilon$ because for exploration-exploitation I use optimistic initial Q-values.
-
-\subsubsection{On-policy learning}
-
-SARSA is a on-policy method. It does mean that it updates q-values using value of $s'$ and current policy '$a''$. Estimations are done assuming current policy will be followed.
-
-\subsubsection{Eligibility traces}
-
-For this algorithm el
-
-\subsubsection{Learning}
 
 \subsection{Benchmark}
 

@@ -104,12 +104,63 @@ Instead of using techniques that are focused on searching function approximating
 
 PEPG is a policy gradient method, it does mean that it estimates policy gradient and use it to maximize rewards given by following a policy.
 
+\subsubsection{Policy}
+
 For first, we define a parametrized policy $\pi_\theta$
 
 \begin{equation}
-$\pi_\theta: s \rightarrow a$
+\pi_\theta: s \rightarrow a
 \end{equation}
 
+For this algorithm purposes, the policy can be basically free-form. I used three layered feed-forward neural network. (two hidden layers, and one output layer).
+Both hidden layers contains 32 neurons each. Output layer has 4 neurons - one per possible action. All layers has $\tanh$ activation function.
+
+If we denote $x$ as state, $\theta = (W,b,W_2,b_2,W_3, b_3)$ the whole policy is following:
+
+\begin{equation}
+\begin{aligned}
+z &= xW + b \\
+\varphi &= \tanh(z) \\
+z_2 &= \varphi W_2 + b_2 \\
+\varphi_2 &= \tanh(z_2) \\
+z_3 &= \varphi W_3 + b_3 \\
+\varphi_3 &= \tanh(z_3) \\
+\text{selected action} &= \argmax(\varphi_3)
+\end{aligned}
+\end{equation}
+
+There is no need to backpropagate this network.
+
+\subsubsection{Definitions}
+
+\begin{itemize}
+
+\item $\theta$ is policy parametrization (one-dimensional vector)
+
+\item $a_t = \pi_\theta(s_t)$ is action taken in step $t$ by following policy $\pi_\theta$
+
+\item $s_t$ is state in step $t$
+
+\item $r_t$ is reward received in step $t$
+
+\item $h = [s_{1:T}, a_{1:T}]$ is a complete history of episode from the beginning to the last step $T$
+\item $R(T) = \sum_{t=1}^{T} r_t$ is sum of rewards during episode $h$
+
+\item $\mathcal{N}(\mu, \sigma^2)$ is normal distribution with mean $\mu$ and variance $\sigma^2$
+
+\item $N$ is number of histories
+\item $P$ in size of parametrization $\theta$. $\theta \in \mathbb{R}^P$
+
+\item $\alpha, \alpha_\mu, \alpha_\sigma$ are various learning rates
+
+\item $\mu$ is current mean parametrization
+\item $\sigma$ is current standard deviation of parametrization
+
+\item $T$ and $S$ are matrices with shape $P\times N$
+
+\item $b$ is mean reward for last 50 iterations
+
+\end{itemize}
 
 
 \subsection{Benchmark}
@@ -121,7 +172,7 @@ Select result to compare.
 \subsubsection{Linear Model}
 \subsubsection{State space discretization}
 
-SARSA kNN assumes that states are in range $[-1;1]$ but as shown in section Data Exploration space state for both problems does not statisfy this assumption. In order to transform space state, following algorithm was used.
+SARSA kNN assumes that states are in range $[-1;1]$ but as shown in section Data Exploration space state for both problems does not statisfy this assumption. In order to transform space state, following algorithm was used. Selected action is one, that has highest output on corresponding neuron. 
 
 \begin{equation}
 \begin{aligned}

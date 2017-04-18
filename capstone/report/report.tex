@@ -5,6 +5,9 @@
 \usepackage{mathtools}
 \usepackage{amssymb}
 \usepackage{todonotes}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\newcommand{\mytilde}{\raise.17ex\hbox{$\scriptstyle\mathtt{‌​\sim}$}}
 \title{Machine Learning Engineer Nanodegree Capstone Project}
 \author{Mateusz Bednarski}
 \date{\today}
@@ -25,37 +28,37 @@
 
 \section{Introduction}
 
-Domain for my capstone project is control problems or robot motion. This requires either a physical robot or simulation engine. For purposes of this project I decided to make use of OpenAI Gym - \url{https://gym.openai.com}. Gym is set of environments simulating various tasks. It provides ready to use simulators and frameworks for comparing algorithms. From available environments, I have selected "LunarLander-v2". For a few reasons:
+Domain for my capstone project is control problems or robot motion. This requires either a physical robot or simulation engine. For purposes of this project I decided to make use of OpenAI Gym\cite{GYM}. Gym is set of environments simulating various tasks. It provides ready to use simulators and frameworks for comparing algorithms. From available environments, I have selected "LunarLander-v2"\cite{lunarlander}. For a few reasons:
 \begin{itemize}
 \item For first, reinforcement learning interested me the most, so I want to get deeper into this.
-\item OpenAI provides leaderborads for each environement, making result comparison easy
+\item OpenAI provides leaderborads for each environement, making result comparison easy.
 \item OpenAI provides problem implementations, thus I can focus only on RL part.
 \item I love space and landing on a planet/moon is interesting problem for me.
-\item It has (approximately – more details in dataset section) continuous state space, so basic tabular Q-learning will not work – I need to examine more sophisticated techniques
-\item Lunar lander is quite challenging environment
+\item It has (approximately – more details in dataset section) continuous state space, so basic tabular Q-learning will not work – I need to examine more sophisticated techniques.
+\item Lunar lander is quite challenging environment.
 \end{itemize}
 
-
-Let's briefly describe both selected problem.
-
 \section{Problem Statement}
+
+\todo{Image}
+
 
 There are a landing pad and a lander. Lander has two legs, and three engines – thrust directed down, left and right. Possible actions are one of do nothing/fire main engine/fire left engine/fire right engine.  Task is to land on the landing pad.  Lander starts above the pad and is affected by gravity. Simulation is finished either lander lands or crashes. Landing outside pad is also possible. Fuel is unlimited and there is no time penalty.
 Rewards and penalties are already defined in the environment:
 \begin{itemize}
-\item Moving towards pad with zero speed: from +100 to +140
-\item Crash: -100
-\item Successful landing: +100
-\item Leg with ground contact: +10
-\item Firing main engine (not side engine): -0.3
+\item Moving towards pad with zero speed: from $+100$ to $+140$
+\item Crash: $-100$
+\item Successful landing: $+100$
+\item Leg with ground contact: $+10$
+\item Firing main engine (not side engine): $-0.3$
 \item When landing outside pad, an additional penalty is given.
 \end{itemize}
 
-Environment is considered as solved, when average episode for 100 consecutive episodes is at least 200.
+Environment is considered as solved, when average episode reward for 100 consecutive episodes is at least 200.
 
 \subsection{Evaluation metric}
 
-For measuring performance I will use moving average of cumulative reward for last 100 episodes, and number of iterations to reach it.
+For measuring performance I will use number of episodes until solving the environment.
 
 \section{Analysis}
 \subsection{Data Exploration}
@@ -85,24 +88,33 @@ State space is a vector of 8 real numbers describing lander position, velocity a
 \end{aligned}
 \end{equation}
 
-\subsection{Space size}
+\subsubsection{Space size}
 
-Before, I said that space consists of real numbers. Given that, space state size  would be uncountably infinite. However, during to machine representation of real numbers it is not exactly true. In typical implementation, \emph{float} can handle one of $2^{52}$ values \footnote{\url{http://stackoverflow.com/a/8875223}}. Storing Q-table for LunarLander would take:
+Before, I said that space consists of real numbers. Given that, space state size  would be uncountably infinite. However, during to machine representation of real numbers it is not exactly true. In typical implementation, \emph{float} can handle one of $2^{52}$ values \footnote{\url{http://stackoverflow.com/a/8875223}}. Size of Q-table for LunarLander is:
 
 \begin{equation}
 |Q| = |S \times A| = |S| \times |A| = \underbrace{{(2^{52})}^6 \cdot 2^2}_{|S|} \cdot \underbrace{4}_{|A|} \approx 2.24 \cdot 10^{102}
 \end{equation}
 
 Which requires $9 \cdot 10^{89}$ PB of memory. Also, each state should be visited enough number of times. It definetely makes this unsolvable by tabular Q-learning.
+\subsubsection{Exploratory visualization}
+
+IMAGE HERE FROM RANDOM AGENT
+
+IMAGE HERE FROM SOLVING AGENT
+
 
 \subsection{Algorithms}
 
-Because Q-space ($S \times A$) is infinite in size, it is impossible to use Q lookup table. There are many approaches to deal with this problem. There are at least two approaches to deal wit this problem. First, is to replace Q table with a function $h(s,a) \rightarrow \mathbb{R}$, that will approximate $Q(s, a)$ values. Therefore, the goal is to find a function $h(s, a)$, that will return a Q-value for a given pair $(s,a)$. Another one, is to discretize continuous space. Hovewer, I decided to use completely different approach.
+Because Q-space ($S \times A$) is infinite in size, it is impossible to use Q lookup table. There are many approaches to deal with this problem. Basic two approaches to deal with this problem is approximation and discretization. Approximation is to replace Q table with a function $h(s,a) \rightarrow \mathbb{R}$, that will approximate $Q(s, a)$ values. Therefore, the goal is to find a function $h(s, a)$, that will return a Q-value for a given pair $(s,a)$. 
+Discretization combines ranges of continuous space state into discrete buckets. However, I decided to use completely different approach.
 
 \subsection{Parameter-exploring Policy Gradient}
-Instead of using techniques that are focused on searching function approximating qvalues, PEPG uses \emph{policy space}. Ultimate goal is to find a policy that will solve the environment. This algorithms search  the policy space in order to find such one. \todo{source}
+Instead of using techniques that are focused on searching function approximating q-values, Parameter-exploring Policy Gradients\cite{pgpe} uses \emph{policy space}. As Ultimate goal is to find a policy that will solve the environment this algorithm search the policy space in order to find such one. \todo{source}
 
 PEPG is a policy gradient method, it does mean that it estimates policy gradient and use it to maximize rewards given by following a policy.
+
+For purposes of this project I have implemented this algorithm with slight differences.
 
 \subsubsection{Policy}
 
@@ -112,10 +124,10 @@ For first, we define a parametrized policy $\pi_\theta$
 \pi_\theta: s \rightarrow a
 \end{equation}
 
-For this algorithm purposes, the policy can be basically free-form. I used three layered feed-forward neural network. (two hidden layers, and one output layer).
+For this PGPE, the policy can be basically free-form. I used three layered feed-forward neural network. (two hidden layers, and one output layer).
 Both hidden layers contains 32 neurons each. Output layer has 4 neurons - one per possible action. All layers has $\tanh$ activation function.
 
-If we denote $x$ as state, $\theta = (W,b,W_2,b_2,W_3, b_3)$ the whole policy is following:
+If we denote $x$ as state, $\theta = (W,b,W_2,b_2,W_3, b_3)$ as policy parameters, the whole policy is following:
 
 \begin{equation}
 \begin{aligned}
@@ -162,6 +174,47 @@ There is no need to backpropagate this network.
 
 \end{itemize}
 
+\subsubsection{Parameters}
+
+\begin{itemize}
+\item $N$ is a size of the population
+\item $\alpha_\mu, \alpha_\sigma$ are learning rates
+\item $H$ is history size
+\item $\sigma$ is initial standard deviation for policy parameters
+
+\end{itemize}
+
+\subsubsection{Algorithm}
+
+\begin{algorithm}
+\caption{PGPE}
+\begin{algorithmic}[1]
+\State initialize $\mu$ with zeros
+\State test phase $\gets$ false
+\While{not solved}
+	\If{test phase}
+		\State validation score $\gets$ evaluate policy($\mu$)
+		\State continue
+	\EndIf
+	\For {$n=0$ to $N-1$}
+		\State sample $\theta^{(n)}$ from $\mathcal{N}(\mu, \sigma^2)$
+	\State $R^{(n)} \gets$ evaluate policy($\theta^{(n)}$)
+	\EndFor
+	\State $T_{ij} \gets \theta_i^{j} - \mu_i$
+	\State $S_{ij} \gets \frac{T_{ij}^2 - \sigma_i^2}{\sigma_i}$
+	\State $R^{(n)} \gets R^{(n)} - b$
+	\State validation score $\gets$ evaluate policy($\mu$)
+	\State b $\gets$ mean reward of last $H$ iterations
+	\If{mean validation score for last 20 is greater than 200}
+		\State{test phase $\gets$ true}
+	\EndIf
+	\State $\mu \gets \alpha_\mu \mu TR$
+	\State $\sigma \gets \sigma \alpha_\sigma SR$
+\EndWhile
+
+\end{algorithmic}
+\end{algorithm}
+
 
 \subsection{Benchmark}
 
@@ -184,6 +237,11 @@ SARSA kNN assumes that states are in range $[-1;1]$ but as shown in section Data
 Where $d$ is dimensionality of original space state, $s_i$ is an element of a state vector, $x_i$ is the same element preprocessed.
 
 This must be done before running agent. For Mountain Car bounds for states are well-defined. For Cart pole they are not. In order to find max and min, from visited states was collected and algorithm was re-launched with updated min and max.
+
+\newpage
+
+\bibliographystyle{alphaurl}
+\bibliography{references} 
 
 \end{document}
 

@@ -149,28 +149,13 @@ There is no need to backpropagate this network.
 
 \item $\theta$ is policy parametrization (one-dimensional vector)
 
-\item $a_t = \pi_\theta(s_t)$ is action taken in step $t$ by following policy $\pi_\theta$
-
-\item $s_t$ is state in step $t$
-
-\item $r_t$ is reward received in step $t$
-
-\item $h = [s_{1:T}, a_{1:T}]$ is a complete history of episode from the beginning to the last step $T$
-\item $R(T) = \sum_{t=1}^{T} r_t$ is sum of rewards during episode $h$
+\item $P$ in size of parametrization $\theta$. $\theta \in \mathbb{R}^P$
 
 \item $\mathcal{N}(\mu, \sigma^2)$ is normal distribution with mean $\mu$ and variance $\sigma^2$
 
-\item $N$ is number of histories
-\item $P$ in size of parametrization $\theta$. $\theta \in \mathbb{R}^P$
-
-\item $\alpha, \alpha_\mu, \alpha_\sigma$ are various learning rates
-
 \item $\mu$ is current mean parametrization
-\item $\sigma$ is current standard deviation of parametrization
 
 \item $T$ and $S$ are matrices with shape $P\times N$
-
-\item $b$ is mean reward for last 50 iterations
 
 \end{itemize}
 
@@ -187,7 +172,7 @@ There is no need to backpropagate this network.
 \subsubsection{Algorithm}
 
 \begin{algorithm}
-\caption{PGPE}
+\caption{PGPE for LunarLander-v2}
 \begin{algorithmic}[1]
 \State initialize $\mu$ with zeros
 \State test phase $\gets$ false
@@ -209,11 +194,15 @@ There is no need to backpropagate this network.
 		\State{test phase $\gets$ true}
 	\EndIf
 	\State $\mu \gets \alpha_\mu \mu TR$
-	\State $\sigma \gets \sigma \alpha_\sigma SR$
+	\State $\sigma \gets \alpha_\sigma \sigma SR$
 \EndWhile
 
 \end{algorithmic}
 \end{algorithm}
+
+Algorithm works in two phases. During first (training phase) in every iteration it evaluates population of $N$ policies and updates $\mu$ and $\sigma$. For each iteration, policy parametrized by $\mu$ is evaluated separately. It does not affect learning, instead measures current performance. If for 20 consecutive trials, validation reward is greater than 200 (it is threshold for solving) we assume that parametrization $\mu$ is sufficient and we can go to test phase.
+
+In test phase, we use learned parametrization $\mu$ in order to get 100 solved episodes. This is done for otpimalization - as correct policy was found there is no need to evaluate $N$ policies every time anymore.
 
 
 \subsection{Benchmark}
@@ -222,21 +211,8 @@ Select result to compare.
 
 \section{Methodology}
 \subsection{Data Preprocessing}
-\subsubsection{Linear Model}
-\subsubsection{State space discretization}
 
-SARSA kNN assumes that states are in range $[-1;1]$ but as shown in section Data Exploration space state for both problems does not statisfy this assumption. In order to transform space state, following algorithm was used. Selected action is one, that has highest output on corresponding neuron. 
-
-\begin{equation}
-\begin{aligned}
-&i={0,1,\ldots, d-1} \\
-&x_i = \frac{s_i - \min(s_1)}{\max(s_i) - \min(s_i)} - 1
-\end{aligned}
-\end{equation}
-
-Where $d$ is dimensionality of original space state, $s_i$ is an element of a state vector, $x_i$ is the same element preprocessed.
-
-This must be done before running agent. For Mountain Car bounds for states are well-defined. For Cart pole they are not. In order to find max and min, from visited states was collected and algorithm was re-launched with updated min and max.
+No form of preprocessing was done in this project as it was not required. However, in general RL can use data preprocessing in order to represent observations in more suitable way (e.g.: tile coding, RBF coding, continuous values discretization).
 
 \newpage
 

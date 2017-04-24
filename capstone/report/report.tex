@@ -214,6 +214,37 @@ Select result to compare.
 
 No form of preprocessing was done in this project as it was not required. However, in general RL can use data preprocessing in order to represent observations in more suitable way (e.g.: tile coding, RBF coding, continuous values discretization).
 
+\subsection{Implementation}
+
+Algorithm was implemented in two classes - \texttt{NeuralNetPolicy} and \texttt{PGPEAgent}
+
+\texttt{NeuralNetPolicy} responsibility is to select an action basing on given state and policy parametrization. Interface is following:
+
+\begin{itemize}
+\item  Constructor takes number of features, actions and sizes for hidden layers
+
+\item \texttt{unpack} gets 1D vector and extract weights for neurons 
+
+\item \texttt{get\_number\_of\_parameters} computes total number of parameters (this is size for $\theta$)
+
+\item \texttt{forward\_pass} performs forward pass for given parametrization and state. Returns action to perform.
+\end{itemize}
+
+\texttt{PGPEAgent} implements the algorithm. Constructor takes all required parameters (environemnt to solve, $\alpha_\sigma$, $\alpha_\mu$, $\sigma$, size of history and population, number of test iterations. It contains two methods.
+
+\begin{itemize}
+\item \texttt{evaluate\_policy} performs full episode using given parametrization $\theta$
+
+\item \texttt{run} takes maximum number of episodes to perform. it implements PGPE and basic visualization plotted in real time.
+
+EXAMPLE VIS
+
+\end{itemize}
+
+
+
+Apart of them
+
 \newpage
 
 \bibliographystyle{alphaurl}

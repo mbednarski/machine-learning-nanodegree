@@ -58,7 +58,7 @@ Environment is considered as solved, when average episode reward for 100 consecu
 
 \subsection{Evaluation metric}
 
-For measuring performance I will use number of episodes until solving the environment.
+For measuring performance I will use number of episodes until solving the environment and time to reach it. This is because I suppose, that some approaches may perform more, faster episodes when others conversely - less, longer episodes.
 
 \section{Analysis}
 \subsection{Data Exploration}
@@ -216,6 +216,10 @@ No form of preprocessing was done in this project as it was not required. Howeve
 
 \subsection{Implementation}
 
+\subsubsection{Parallelization}
+
+Some part of the algorithm can be easily parallelized - loop at lines 7-9. This is because each iteration in population is independent from another. Created implementation utilizes this possibility. For parallelizsm, library \texttt{joblib}\cite{joblib} was used. As a result, execution time is reduced 2-3 times.
+
 Algorithm was implemented in two classes - \texttt{NeuralNetPolicy} and \texttt{PGPEAgent}
 
 \texttt{NeuralNetPolicy} responsibility is to select an action basing on given state and policy parametrization. Interface is following:
@@ -233,7 +237,6 @@ Algorithm was implemented in two classes - \texttt{NeuralNetPolicy} and \texttt{
 \texttt{PGPEAgent} implements the algorithm. Constructor takes all required parameters (environemnt to solve, $\alpha_\sigma$, $\alpha_\mu$, $\sigma$, size of history and population, number of test iterations. It contains two methods.
 
 \begin{itemize}
-\item \texttt{evaluate\_policy} performs full episode using given parametrization $\theta$
 
 \item \texttt{run} takes maximum number of episodes to perform. it implements PGPE and basic visualization plotted in real time.
 
@@ -241,9 +244,63 @@ EXAMPLE VIS
 
 \end{itemize}
 
+\texttt{evaluate\_policy} performs full episode using given parametrization $\theta$. This function is not member of any class because of it will be runned in parallel - \texttt{joblib} requires such code  not to be a class method.
+
+Apart of them \texttt{Monitor} class was implemented. This class is responsible for saving duration and reward for episodes and store them into files. Next, they can be used to generate statistics and plots (\texttt{analysis.py}).
+
+\subsection{Complications and Refinement}
+
+Solution improvements came along with solving issues, so I am presenting them in a single list.
+
+\begin{itemize}
+\item{\textbf{Policy}} Initially, two layer neural network policy was used (both layers with size of 32 neurons). This approach caused slower divergence in aspect of iterations to solve (more parameters was needed to tune) and iteration duration (more computations for forward pass). Later one it turned out, that simpler policy is also capable for this problem and reduces training effort. However, with removing hidden layer completely I was not able to get solution. Learning: policy should be just as complicated as required, making it more sophisticated does not provide any benefit.
+
+\item{\textbf{GPU utilization}} To make process even faster I have tried to perform some computations on GPU. For this I have implemented policy forward pass using TensorFlow\cite{tensorflow} using various scenarios (creating computation graph at once and use \texttt{tf.placeholder} to set weights, creating graphs multiple times with \texttt{tf.constant}). However, it resulted with worse execution times. I did not perform specific profiling, but I believe there were too little computations to equilibrium cost of CPU/GPU communication.
+
+\item{\textbf{Another Python distribution}} Another attempt to optimize the code, was to use Intel Python Distribution\footnote{https://software.intel.com/en-us/intel-distribution-for-python} but results were unnoticeable.
+
+\item{\textbf{Floating point errors}} Initially I have used much higher learning rates. Learning was faster, but I have experiencing floating point arithmetic errors - policy parameters quickly became too high causing overflow errors. This forced me to use \texttt{np.seterr('raise')} in order to be notified about those errors.
+
+\end{itemize}
 
 
-Apart of them
+
+\section{Model evaluation}
+
+\subsection{Measured qualities}
+
+For each test, two qualities was measured: number of iterations and total execution time (computed as sum of all iteration times). They are the same as in Evaluation metric section.
+
+\subsection{Parameters}
+
+Parameters are also same as stated in section XXX. Quick recap:
+
+\begin{itemize}
+\item $N$ is population size
+\item $\alpha_\mu = 1e3, \alpha_\sigma$ are learning rates
+\item $H$ is history size
+\item $\sigma$ is initial standard deviation for policy parameters
+
+\end{itemize}
+
+Most comprehensive way to perform analysis would be to run grid search over whole parameter space with few repetitions - in order to reduce fluctuations influence. However, with regard to long execution time it was impossible. Instead, I established a baseline set of parameters and measured influence of each parameter separately. The baseline parameters are following:
+
+\begin{tabular}{|c|c|}
+\hline 
+Parameter & baseline value \\
+\hline 
+$N$ & $500$ \\
+\hline 
+$\alpha_\mu$ & $1 \cdot 10^{-4}$ \\
+\hline 
+$\alpha_\sigma$ & $1 \cdot 10^{-5}$ \\
+\hline 
+$H$ & $50$ \\
+\hline 
+$\sigma$ & $0.5$ \\
+\hline 
+\end{tabular} 
+
 
 \newpage
 

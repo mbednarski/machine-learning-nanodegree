@@ -5,24 +5,30 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 import gym
+import gym.wrappers
+
+from joblib import Parallel, delayed
 
 from monitor import Monitor
 
+NUMBER_OF_THREADS = 2
+problem = 'LunarLander-v2'
+logging.disable(logging.CRITICAL)  # disable messages about env creation
+
 
 class NeuralNetPolicy(object):
-    def __init__(self, n_features, n_actions, n_hidden1=32, n_hidden2=32):
+    def __init__(self, n_features, n_actions, n_hidden=32):
         """
         Creates a policy that uses forward-pass neural network with two hidden layers
         :param n_features: Number of features of the state (and size of the input layer)
         :param n_actions: Number of actions (and size of the output layer)
         :param n_hidden1: Size of first hidden layer
-        :param n_hidden2: Size of second hidden layer
         """
         self.n_actions = n_actions
         self.n_features = n_features
-        self.n_hidden1 = n_hidden1
-        self.n_hidden2 = n_hidden2
+        self.n_hidden = n_hidden
 
+    @staticmethod
     def unpack(self, theta):
         """
         Unpacks 1D array to separate arrays with weights and biases for neural network in order: w, b, w2, b2, w3, b3
@@ -30,11 +36,9 @@ class NeuralNetPolicy(object):
         :return: Unpacked parameters
         """
         shapes = [
-            (self.n_features, self.n_hidden1),
-            (1, self.n_hidden1),
-            (self.n_hidden1, self.n_hidden2),
-            (1, self.n_hidden2),
-            (self.n_hidden2, self.n_actions),
+            (self.n_features, self.n_hidden),
+            (1, self.n_hidden),
+            (self.n_hidden, self.n_actions),
             (1, self.n_actions),
         ]
         result = []
@@ -51,7 +55,7 @@ class NeuralNetPolicy(object):
         :param state: State
         :return: selected action
         """
-        w, b, w2, b2, w3, b3 = self.unpack(theta)
+        w, b, w2, b2 = self.unpack(self, theta)
 
         z = state.dot(w) + b
         a1 = np.tanh(z)
@@ -59,18 +63,14 @@ class NeuralNetPolicy(object):
         z2 = a1.dot(w2) + b2
         a2 = np.tanh(z2)
 
-        z3 = a2.dot(w3) + b3
-        a3 = np.tanh(z3)
-
-        return np.argmax(a3)
+        return np.argmax(a2)
 
     def get_number_of_parameters(self):
         """
         Computes total number of parameters for policy
         :return:
         """
-        return (self.n_features + 1) * self.n_hidden1 + (self.n_hidden1 + 1) * self.n_hidden2 + \
-               (self.n_hidden2 + 1) * self.n_actions
+        return (self.n_features + 1) * self.n_hidden + (self.n_hidden + 1) * self.n_actions
 
 
 class PEPGAgent(object):
@@ -97,7 +97,7 @@ class PEPGAgent(object):
         self.validation_env = gym.make(env.spec.id)
         self.validation_env = gym.wrappers.Monitor(self.validation_env, directory='/tmp/pgpe', force=True)
 
-        self.policy = NeuralNetPolicy(self.n_features, self.n_actions)
+        self.policy = NeuralNetPolicy(self.n_features, self.n_actions, n_hidden=32)
         self.P = self.policy.get_number_of_parameters()
         self.N = population_size
 
@@ -106,32 +106,6 @@ class PEPGAgent(object):
 
         self.initial_sigma = initial_sigma
 
-    def evaluate_policy(self, theta, env=None, render=False):
-        """
-        Evaluates policy with given parametrization theta.
-        :param theta: Policy parametrization
-        :param env: Env to act inside of. If none, a new one is created
-        :param render: Renders world state?
-        :return: Cumulative reward for single episode
-        """
-        if env is None:
-            env = gym.make(self.validation_env.spec.id)
-        episode_reward = 0
-        state = env.reset()
-
-        for _ in itertools.count():
-            action = self.policy.forward_pass(theta, state)
-
-            new_state, reward, done, _ = env.step(action)
-
-            if render:
-                env.render()
-
-            state = new_state
-            episode_reward += reward
-
-            if done:
-                return episode_reward
 
     def run(self, max_iterations=150000):
         """
@@ -149,6 +123,10 @@ class PEPGAgent(object):
 
         monitor = Monitor()
 
+        envs = []
+        for _ in range(NUMBER_OF_THREADS):
+            envs.append(gym.make(self.validation_env.spec.id))
+
         for _ in range(max_iterations):
             if test_phase:
                 # in test phase just evaluate policy `test_iteration` times
@@ -162,10 +140,21 @@ class PEPGAgent(object):
             evaluation_start_time = time()
 
             theta = np.zeros((self.N, self.P))
-            r = np.zeros(self.N)
+            # r = np.zeros(self.N)
             for n in range(self.N):
                 theta[n, :] = np.random.normal(u, sigma)
-                r[n] = self.evaluate_policy(theta[n])
+
+
+
+                # r[n] = self.evaluate_policy(theta[n])
+
+            # thread_func = lambda x: self.evaluate_policy(x)
+
+            results = Parallel(n_jobs=NUMBER_OF_THREADS, backend='threading')(
+                delayed(evaluate_policy)(self.policy, theta[n, :]) for n in range(self.N)
+            )
+
+            r = np.array(results)
 
             T = theta.T - np.repeat(np.array([u]).T, self.N, axis=1)
 
@@ -179,7 +168,7 @@ class PEPGAgent(object):
 
             # evaluate current policy
 
-            val_score = self.evaluate_policy(u, self.validation_env, render=True)
+            val_score = evaluate_policy(self.policy, u, self.validation_env, render=True)
 
             # save weights if we may would like to use pre-trained policy (not implemented)
             np.save('current_policy', u)
@@ -214,6 +203,33 @@ class PEPGAgent(object):
 
         monitor.save()
 
+def evaluate_policy(policy, theta, env=None, render=False):
+    """
+    Evaluates policy with given parametrization theta.
+    :param theta: Policy parametrization
+    :param env: Env to act inside of. If none, a new one is created
+    :param render: Renders world state?
+    :return: Cumulative reward for single episode
+    """
+    if env is None:
+        env = gym.make(problem)
+    episode_reward = 0
+    state = env.reset()
+
+    for _ in itertools.count():
+        action = policy.forward_pass(theta, state)
+
+        new_state, reward, done, _ = env.step(action)
+
+        if render:
+            env.render()
+
+        state = new_state
+        episode_reward += reward
+
+        if done:
+            return episode_reward
+
 
 def update_plot(val_history=None, mean_history=None, rolling_history=None):
     """
@@ -233,12 +249,10 @@ def update_plot(val_history=None, mean_history=None, rolling_history=None):
 
 def launch():
     np.random.seed(2017)  # set fixed seed in order to get reproducible results
-    logging.disable(logging.CRITICAL)  # disable messages about env creation
     np.seterr('raise')  # raise error on arithmetic errors (overflow/underflow, illegal division etc
-    problem = 'LunarLander-v2'
     env = gym.make(problem)
 
-    agent = PEPGAgent(env, alpha_sigma=0.00001, alpha_u=0.0001, history_size=50, population_size=500,
+    agent = PEPGAgent(env, alpha_sigma=0.00001, alpha_u=0.0001, history_size=50, population_size=500, initial_sigma=0.5
                       test_iterations=200)
 
     agent.run(10000)

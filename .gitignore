@@ -2,3 +2,8 @@ capstone/report/report.out
 capstone/report/report.aux
 capstone/report/report.log
 capstone/report/report.synctex.gz
+capstone/src/monitor/
+capstone/src/output/cartpole-experiment-1/
+capstone/src/logs/
+capstone/src/output/cartpole-experiment-*
+capstone/src/xddd_mc/

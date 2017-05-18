@@ -301,6 +301,42 @@ $\sigma$ & $0.5$ \\
 \hline 
 \end{tabular} 
 
+As there are 5 parameters, 10 configuations were created - with bigger and smaller value of each one. Here are parameters values for those settings:
+
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+\hline 
+\# & $N$	& $\alpha_\mu$	& $\alpha_\sigma$	& $H$	& $\sigma$ &	time to finish [min]&	iterations to finish & it/min\\
+\hline
+0 & 500     &  0.0001	& 0.00001	& 50	& 0.5	& 23.15 &	55   & 2.3 \\
+1  & 400	&  0.0001	& 0.00001	& 50	& 0.5	& 15.78 &	91   & 5.7\\
+2  & 600	&  0.0001	& 0.00001	& 50	& 0.5	& 25.29 &	49   & 1.9\\
+3  & 500	&  0.0002	& 0.00001	& 50	& 0.5	& 30.96 &	113  &  3.65\\
+4  & 500	&  0.00005	& 0.00001	& 50	& 0.5	& 25.86 &	253  &  9.78\\
+5  & 500	&  0.0001	& 0.00002	& 50	& 0.5	& 23.22 &	47   & 2.02\\
+6  & 500	&  0.0001	& 0.000005 & 	50 	& 0.5	& 27.78 &	78   & 2.80\\
+7  & 500	&  0.0001	& 0.00001	& 75	& 0.5	& 29.14 &	88   & 3.02\\
+8  & 500	&  0.0001	& 0.00001	& 25	& 0.5	& 29.54 &	75   & 2.53\\
+9  & 500	&  0.0001	& 0.00001	& 50	& 0.6	& 24.87 &	91   & 3.66\\
+10 &  500&     0.0001	& 0.00001	& 50	& 0.4	&  27.5 &	52   & 1.89\\
+\hline
+\end{tabular} 
+Fist of all results show that indeed higher number of iterations does not imply longer execution time - e.g. comparing \#0 with \#1. After this, selected baseline looks like being near to the optimum (at least local one ).
+
+Reducing size of population (\#0,1,2) causes almost twice as much iterations to perform, but they are a lot of faster. This is because in later stage of learning when models performs better also execution time increases - lander stops crashing fast. As expected increasing $N$ makes fewer, longer iterations.
+
+Both learning rates (\#0,3,4,5,6) seems to be near optimum, because changing them makes process longer. Especially reducing $\alpha_\mu$.
+
+Similar effect can be observed for $H$ (\#7,8).
+
+Increasing initial $\sigma$(\#9,10) causes big incrementation in terms of iterations and reducing - in time.
+
+In project repository, there are plots for all of those configurations.
+
+In order to provide more complete and reliable analysis for each case multiple runs should be executed. Also, relations between parameters may be explored. This could be done either by hand or using GridSearch or RandomSearch over parameter space. However it was done because of lack of available computation time.
+
+Reference to scikit learn
+
+In fact, for all parameters model was able to solve the task.
 
 \newpage
 

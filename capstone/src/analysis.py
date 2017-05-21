@@ -59,5 +59,10 @@ if __name__ == '__main__':
                                                                                                    total_iterations * 1.0 / (
                                                                                                    total_time / 60)))
         sns.tsplot(reward)
-        sns.plt.title("#{} Episode reward".format(i))
+        sns.plt.title("#{} configuration reward".format(i))
+        sns.plt.legend(['Iteration reward'])
+        sns.plt.xlabel('Iteration number')
+        sns.plt.ylabel('Reward')
+        sns.plt.savefig('../parameter_exploration/parameter_set_{}.png'.format(i))
+        sns.plt.clf()
         # sns.plt.show()

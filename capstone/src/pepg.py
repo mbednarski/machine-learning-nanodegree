@@ -254,7 +254,7 @@ def launch():
     np.seterr('raise')  # raise error on arithmetic errors (overflow/underflow, illegal division etc
     env = gym.make(problem)
 
-    agent = PEPGAgent(env, alpha_sigma=0.00001, alpha_u=0.0001, history_size=50, population_size=500, initial_sigma=0.4,
+    agent = PEPGAgent(env, alpha_sigma=0.00001, alpha_u=0.0001, history_size=50, population_size=500, initial_sigma=0.5,
                       test_iterations=200)
 
     agent.run(10000)

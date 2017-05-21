@@ -67,9 +67,7 @@ For measuring performance I will use number of episodes until solving the enviro
 \section{Analysis}
 \subsection{Data Exploration}
 
-As it is a reinforcement learning problem, there is no dataset understood in classical way. Instead, I explored mechanics of problems more deeply. Data about states distribution for was generated using random action selection. There is a need to be careful with this data - for random walking probably, many states will not be visited much often. However it provides an overview.
-
-The same data was grabbed for solving agent to compare distributions.
+As it is a reinforcement learning problem, there is no dataset understood in classical way.
 
 \subsubsection{Action and state space}
 
@@ -122,7 +120,7 @@ For first, we define a parametrized policy $\pi_\theta$
 \pi_\theta: s \rightarrow a
 \end{equation}
 
-For this PGPE, the policy can be basically free-form. I used two layered feed-forward neural network. (one hidden layers, and one output layer).
+For this PGPE, the policy can be basically free-form. I used two layered feed-forward neural network. (one hidden layer, and one output layer).
 Hidden layers contains 32 neurons. Output layer has 4 neurons - one per possible action. All layers has $\tanh$ activation function.
 
 If we denote $x$ as state, $\theta = (W,b,W_2,b_2)$ as policy parameters, the whole policy is following:
@@ -198,12 +196,12 @@ There is no need to backpropagate this network.
 
 Algorithm works in two phases. During first (training phase) in every iteration it evaluates population of $N$ policies and updates $\mu$ and $\sigma$. For each iteration, policy parametrized by $\mu$ is evaluated separately. It does not affect learning, instead measures current performance. If for 20 consecutive trials, validation reward is greater than 200 (it is threshold for solving) we assume that parametrization $\mu$ is sufficient and we can go to test phase.
 
-In test phase, we use learned parametrization $\mu$ in order to get 100 solved episodes. This is done for otpimalization - as correct policy was found there is no need to evaluate $N$ policies every time anymore.
+In test phase, we use learned parametrization $\mu$ in order to get 100 solved episodes. This is done for optimalization - as correct policy was found there is no need to evaluate $N$ policies every time anymore.
 
 
 \subsection{Benchmark}
 
-For benchmark I have selected following evaluation from gym - \url{https://gym.openai.com/evaluations/eval_QOfhB9uhQ1W2hKqF8H365A} by user @pranz24. This algorithm () solved environemnt after 60199 episodes and 3 hours. I will use it to compare with outcome of my work.
+For benchmark I have selected following evaluation from gym - \url{https://gym.openai.com/evaluations/eval_QOfhB9uhQ1W2hKqF8H365A} by user @pranz24. This algorithm (Covariance Matrix Adaptation Evolution Strategies) solved environment after 60199 episodes and 3 hours. I will use it to compare with outcome of my work.
 
 \section{Methodology}
 \subsection{Data Preprocessing}
@@ -214,7 +212,7 @@ No form of preprocessing was done in this project as it was not required. Howeve
 
 \subsubsection{Parallelization}
 
-Some part of the algorithm can be easily parallelized - loop at lines 7-9. This is because each iteration in population is independent from another. Created implementation utilizes this possibility. For parallelizsm, library \texttt{joblib}\cite{joblib} was used. As a result, execution time is reduced 2-3 times.
+Some part of the algorithm can be easily parallelized - loop at lines 7-9. This is because each iteration in population is independent from another. Created implementation utilizes this possibility. For parallelizsm, library \texttt{joblib} was used. As a result, execution time is reduced 2-3 times.
 
 Algorithm was implemented in two classes - \texttt{NeuralNetPolicy} and \texttt{PGPEAgent}
 
@@ -275,11 +273,11 @@ For each test, two qualities was measured: number of iterations and total execut
 
 \subsection{Parameters}
 
-Parameters are also same as stated in section XXX. Quick recap:
+Parameters are also same as shown before. Quick recap:
 
 \begin{itemize}
 \item $N$ is population size
-\item $\alpha_\mu = 1e3, \alpha_\sigma$ are learning rates
+\item $\alpha_\mu, \alpha_\sigma$ are learning rates
 \item $H$ is history size
 \item $\sigma$ is initial standard deviation for policy parameters
 
@@ -287,6 +285,8 @@ Parameters are also same as stated in section XXX. Quick recap:
 
 Most comprehensive way to perform analysis would be to run grid search over whole parameter space with few repetitions - in order to reduce fluctuations influence. However, with regard to long execution time it was impossible. Instead, I established a baseline set of parameters and measured influence of each parameter separately. The baseline parameters are following:
 
+\begin{table}[!h]
+\centering
 \begin{tabular}{|c|c|}
 \hline 
 Parameter & baseline value \\
@@ -302,10 +302,12 @@ $H$ & $50$ \\
 $\sigma$ & $0.5$ \\
 \hline 
 \end{tabular} 
+\caption{Baseline parameters}
+\end{table}
 
-As there are 5 parameters, 10 configurations were created - with bigger and smaller value of each one. Here are parameters values for those settings:
+As there are 5 parameters, 10 configurations were created - with bigger and smaller value of each one. Parameters values for those settings are described in Table 2.
 
-\begin{table}
+\begin{table}[!!h]
 \centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \hline 
@@ -324,6 +326,7 @@ As there are 5 parameters, 10 configurations were created - with bigger and smal
 10 &  500&     0.0001	& 0.00001	& 50	& 0.4	&  27.5 &	52   & 1.89\\
 \hline
 \end{tabular} 
+\caption{Parameters exploration}
 \end{table}
 Fist of all results show that indeed higher number of iterations does not imply longer execution time - e.g. comparing \#0 with \#1. After this, selected baseline looks like being near to the optimum (at least local one ).
 
@@ -333,21 +336,21 @@ Both learning rates (\#0,3,4,5,6) seems to be near optimum, because changing the
 
 Similar effect can be observed for $H$ (\#7,8).
 
-Increasing initial $\sigma$(\#9,10) causes big incrementation in terms of iterations and reducing - in time.
+Increasing initial $\sigma$(\#9,10) causes big incrementation in terms of iterations and reducing - in time. 
 
-In project repository, there are plots for all of those configurations.
+
+In project repository, there are plots for all of those configurations (parameter exploration directory).
+
 
 In order to provide more complete and reliable analysis for each case multiple runs should be executed. Also, relations between parameters may be explored. This could be done either by hand or using GridSearch or RandomSearch from scikit-learn\cite{sklearn} over parameter space. However it was done because of lack of available computation time.
-
-Reference to scikit learn
 
 In fact, for all parameters model was able to solve the task.
 
 \subsection{Results and visualization}
 
-In results analysis I will use baseline parameter values. Implemented model finshed learning phase after 55 iterations and approximately 23 minutes. As population size was set to 500, this gives actual number of simulation episodes  $55 * 500 = 27500$. After learning phase there were 200 test runs (without learning). To sum up, agent achieved "average for 100 consecutive trials above 200" at iteration \textbf{21} after total number of episodes equal to $21 * 500 = 10500$. So here is the point when environment can be considered as solved (even if agent was learning longer).
+In results analysis I will use baseline parameter values. Implemented model finished learning phase after 55 iterations and approximately 23 minutes. As population size was set to 500, this gives actual number of simulation episodes  $55 * 500 = 27500$. After learning phase there were 200 test runs (without learning). To sum up, agent achieved "average for 100 consecutive trials above 200" at iteration \textbf{21} after total number of episodes equal to $21 * 500 = 10500$. So here is the point when environment can be considered as solved (even if agent was learning longer).
 
-\begin{figure}[h]
+\begin{figure}[!h]
 \centering
 \includegraphics[scale=0.9]{final_plot.png} 
 \caption{Agent rewards per iteration}
@@ -378,6 +381,8 @@ To put it briefly: I have implemented the PEGP algorithm in multi-threaded versi
 \subsection{Improvement}
 
 PEPG algorithm can benefit from technique called \emph{symmetrical sampling}. Briefly it generates random perturbations ($\epsilon$) on current policy($\mu$ and apply as addition and a subtraction, resulting in two populations - $\mu - \epsilon$ and $\mu + epsilon$). This makes gradient estimation more precise and reduces variance. However this makes implementation more complicated and due the fact that I am satisfied with current results I did not decide to implement this.
+
+Another improvement could be deeper parameter exploration (as mentioned earlier).
 
 
 \newpage

@@ -40,7 +40,11 @@ Domain for my capstone project is control problems or robot motion. This require
 
 \section{Problem Statement}
 
-\todo{Image}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.3]{lunar.png} 
+\caption{Screenshot from the environment}
+\end{figure}
 
 
 There are a landing pad and a lander. Lander has two legs, and three engines – thrust directed down, left and right. Possible actions are one of do nothing/fire main engine/fire left engine/fire right engine.  Task is to land on the landing pad.  Lander starts above the pad and is affected by gravity. Simulation is finished either lander lands or crashes. Landing outside pad is also possible. Fuel is unlimited and there is no time penalty.
@@ -97,12 +101,6 @@ Before, I said that space consists of real numbers. Given that, space state size
 \end{equation}
 
 Which requires $9 \cdot 10^{89}$ PB of memory. Also, each state should be visited enough number of times. It definetely makes this unsolvable by tabular Q-learning.
-\subsubsection{Exploratory visualization}
-
-IMAGE HERE FROM RANDOM AGENT
-
-IMAGE HERE FROM SOLVING AGENT
-
 
 \subsection{Algorithms}
 
@@ -110,7 +108,7 @@ Because Q-space ($S \times A$) is infinite in size, it is impossible to use Q lo
 Discretization combines ranges of continuous space state into discrete buckets. However, I decided to use completely different approach.
 
 \subsection{Parameter-exploring Policy Gradient}
-Instead of using techniques that are focused on searching function approximating q-values, Parameter-exploring Policy Gradients\cite{pgpe} uses \emph{policy space}. As Ultimate goal is to find a policy that will solve the environment this algorithm search the policy space in order to find such one. \todo{source}
+Instead of using techniques that are focused on searching function approximating q-values, Parameter-exploring Policy Gradients\cite{pgpe} uses \emph{policy space}. As Ultimate goal is to find a policy that will solve the environment this algorithm search the policy space in order to find such one.
 
 PEPG is a policy gradient method, it does mean that it estimates policy gradient and use it to maximize rewards given by following a policy.
 
@@ -124,10 +122,10 @@ For first, we define a parametrized policy $\pi_\theta$
 \pi_\theta: s \rightarrow a
 \end{equation}
 
-For this PGPE, the policy can be basically free-form. I used three layered feed-forward neural network. (two hidden layers, and one output layer).
-Both hidden layers contains 32 neurons each. Output layer has 4 neurons - one per possible action. All layers has $\tanh$ activation function.
+For this PGPE, the policy can be basically free-form. I used two layered feed-forward neural network. (one hidden layers, and one output layer).
+Hidden layers contains 32 neurons. Output layer has 4 neurons - one per possible action. All layers has $\tanh$ activation function.
 
-If we denote $x$ as state, $\theta = (W,b,W_2,b_2,W_3, b_3)$ as policy parameters, the whole policy is following:
+If we denote $x$ as state, $\theta = (W,b,W_2,b_2)$ as policy parameters, the whole policy is following:
 
 \begin{equation}
 \begin{aligned}
@@ -135,9 +133,7 @@ z &= xW + b \\
 \varphi &= \tanh(z) \\
 z_2 &= \varphi W_2 + b_2 \\
 \varphi_2 &= \tanh(z_2) \\
-z_3 &= \varphi W_3 + b_3 \\
-\varphi_3 &= \tanh(z_3) \\
-\text{selected action} &= \argmax(\varphi_3)
+\text{selected action} &= \argmax(\varphi_2)
 \end{aligned}
 \end{equation}
 
@@ -207,7 +203,7 @@ In test phase, we use learned parametrization $\mu$ in order to get 100 solved e
 
 \subsection{Benchmark}
 
-Select result to compare.
+For benchmark I have selected following evaluation from gym - \url{https://gym.openai.com/evaluations/eval_QOfhB9uhQ1W2hKqF8H365A} by user @pranz24. This algorithm () solved environemnt after 60199 episodes and 3 hours. I will use it to compare with outcome of my work.
 
 \section{Methodology}
 \subsection{Data Preprocessing}
@@ -240,7 +236,11 @@ Algorithm was implemented in two classes - \texttt{NeuralNetPolicy} and \texttt{
 
 \item \texttt{run} takes maximum number of episodes to perform. it implements PGPE and basic visualization plotted in real time.
 
-EXAMPLE VIS
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{monitor.png} 
+\caption{Visualization during training}
+\end{figure}
 
 \end{itemize}
 
@@ -260,6 +260,8 @@ Solution improvements came along with solving issues, so I am presenting them in
 \item{\textbf{Another Python distribution}} Another attempt to optimize the code, was to use Intel Python Distribution\footnote{https://software.intel.com/en-us/intel-distribution-for-python} but results were unnoticeable.
 
 \item{\textbf{Floating point errors}} Initially I have used much higher learning rates. Learning was faster, but I have experiencing floating point arithmetic errors - policy parameters quickly became too high causing overflow errors. This forced me to use \texttt{np.seterr('raise')} in order to be notified about those errors.
+
+\item{\textbf{Random number generator}} A lot of issues occurred when I tried to generate random numbers in threads. Given that, final implementation computes random numbers in main thread and send them to worker threads.
 
 \end{itemize}
 
@@ -301,8 +303,10 @@ $\sigma$ & $0.5$ \\
 \hline 
 \end{tabular} 
 
-As there are 5 parameters, 10 configuations were created - with bigger and smaller value of each one. Here are parameters values for those settings:
+As there are 5 parameters, 10 configurations were created - with bigger and smaller value of each one. Here are parameters values for those settings:
 
+\begin{table}
+\centering
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \hline 
 \# & $N$	& $\alpha_\mu$	& $\alpha_\sigma$	& $H$	& $\sigma$ &	time to finish [min]&	iterations to finish & it/min\\
@@ -320,6 +324,7 @@ As there are 5 parameters, 10 configuations were created - with bigger and small
 10 &  500&     0.0001	& 0.00001	& 50	& 0.4	&  27.5 &	52   & 1.89\\
 \hline
 \end{tabular} 
+\end{table}
 Fist of all results show that indeed higher number of iterations does not imply longer execution time - e.g. comparing \#0 with \#1. After this, selected baseline looks like being near to the optimum (at least local one ).
 
 Reducing size of population (\#0,1,2) causes almost twice as much iterations to perform, but they are a lot of faster. This is because in later stage of learning when models performs better also execution time increases - lander stops crashing fast. As expected increasing $N$ makes fewer, longer iterations.
@@ -332,11 +337,48 @@ Increasing initial $\sigma$(\#9,10) causes big incrementation in terms of iterat
 
 In project repository, there are plots for all of those configurations.
 
-In order to provide more complete and reliable analysis for each case multiple runs should be executed. Also, relations between parameters may be explored. This could be done either by hand or using GridSearch or RandomSearch over parameter space. However it was done because of lack of available computation time.
+In order to provide more complete and reliable analysis for each case multiple runs should be executed. Also, relations between parameters may be explored. This could be done either by hand or using GridSearch or RandomSearch from scikit-learn\cite{sklearn} over parameter space. However it was done because of lack of available computation time.
 
 Reference to scikit learn
 
 In fact, for all parameters model was able to solve the task.
+
+\subsection{Results and visualization}
+
+In results analysis I will use baseline parameter values. Implemented model finshed learning phase after 55 iterations and approximately 23 minutes. As population size was set to 500, this gives actual number of simulation episodes  $55 * 500 = 27500$. After learning phase there were 200 test runs (without learning). To sum up, agent achieved "average for 100 consecutive trials above 200" at iteration \textbf{21} after total number of episodes equal to $21 * 500 = 10500$. So here is the point when environment can be considered as solved (even if agent was learning longer).
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.9]{final_plot.png} 
+\caption{Agent rewards per iteration}
+\end{figure}
+
+\begin{figure}[!h]
+\centering
+\includegraphics[scale=0.9]{final_plot_duration.png} 
+\caption{Iteration durations}
+\end{figure}
+
+When it comes to iteration duration time it can be seen that during learning phase this time is a lot of longer due to fact that on testing phase there is only one episode instead of few hundreds.
+
+Repeating model executions give similar results.
+
+\subsection{Justification}
+
+Presented model performed better than one selected in benchmark section. To recap benchmark model solved problem after 60199 episodes in about 3 hours, when presented here required only 10500 and 23 minutes.
+
+\subsection{Hardware}
+Hardware environment used in this project is Intel i5 3,1GHz CPU with 16GB RAM memory and Linux Mint 18.1 x64.
+
+\section{Conclusion}
+\subsection{Reflection}
+
+To put it briefly: I have implemented the PEGP algorithm in multi-threaded version in order to solve LunarLander-v2 reinforcement learning problem. Implemented solution uses feed forward neural network with one hidden layer and does not require backpropagation. I am satisfied with achieved results. I found aspect of optimizing code very interesting even if I was not able to utilize GPU. Another interesting thing was to actually research algorithms that could help me - at some point I wanted to give up because I had feeling, that I will not be able to complete this project.
+
+\subsection{Improvement}
+
+PEPG algorithm can benefit from technique called \emph{symmetrical sampling}. Briefly it generates random perturbations ($\epsilon$) on current policy($\mu$ and apply as addition and a subtraction, resulting in two populations - $\mu - \epsilon$ and $\mu + epsilon$). This makes gradient estimation more precise and reduces variance. However this makes implementation more complicated and due the fact that I am satisfied with current results I did not decide to implement this.
+
 
 \newpage
 

@@ -11,7 +11,7 @@ from joblib import Parallel, delayed
 
 from monitor import Monitor
 
-NUMBER_OF_THREADS = 2
+NUMBER_OF_THREADS = 3
 problem = 'LunarLander-v2'
 logging.disable(logging.CRITICAL)  # disable messages about env creation
 
@@ -95,7 +95,7 @@ class PEPGAgent(object):
         self.n_features = env.observation_space.shape[0]
         self.n_actions = env.action_space.n
         self.validation_env = gym.make(env.spec.id)
-        self.validation_env = gym.wrappers.Monitor(self.validation_env, directory='/tmp/pgpe', force=True)
+        # self.validation_env = gym.wrappers.Monitor(self.validation_env, directory='/tmp/pgpe', force=True)
 
         self.policy = NeuralNetPolicy(self.n_features, self.n_actions, n_hidden=32)
         self.P = self.policy.get_number_of_parameters()
@@ -123,15 +123,17 @@ class PEPGAgent(object):
 
         monitor = Monitor()
 
-        envs = []
-        for _ in range(NUMBER_OF_THREADS):
-            envs.append(gym.make(self.validation_env.spec.id))
 
         for _ in range(max_iterations):
             if test_phase:
                 # in test phase just evaluate policy `test_iteration` times
-                val = self.evaluate_policy(u, self.validation_env, render=True)
+                evaluation_start_time = time()
+                val = evaluate_policy(self.policy, u, self.validation_env, render=True)
                 self.test_iterations -= 1
+                iteration_duration = time() - evaluation_start_time
+
+                monitor.observe_episode(val, iteration_duration)
+
                 print('Test evaluation with score {}'.format(val))
                 if self.test_iterations == 0:
                     break
@@ -150,7 +152,7 @@ class PEPGAgent(object):
 
             # thread_func = lambda x: self.evaluate_policy(x)
 
-            results = Parallel(n_jobs=NUMBER_OF_THREADS, backend='threading')(
+            results = Parallel(n_jobs=NUMBER_OF_THREADS)(
                 delayed(evaluate_policy)(self.policy, theta[n, :]) for n in range(self.N)
             )
 
@@ -168,7 +170,7 @@ class PEPGAgent(object):
 
             # evaluate current policy
 
-            val_score = evaluate_policy(self.policy, u, self.validation_env, render=True)
+            val_score = evaluate_policy(self.policy, u, self.validation_env, render=False)
 
             # save weights if we may would like to use pre-trained policy (not implemented)
             np.save('current_policy', u)
@@ -252,7 +254,7 @@ def launch():
     np.seterr('raise')  # raise error on arithmetic errors (overflow/underflow, illegal division etc
     env = gym.make(problem)
 
-    agent = PEPGAgent(env, alpha_sigma=0.00001, alpha_u=0.0001, history_size=50, population_size=500, initial_sigma=0.5
+    agent = PEPGAgent(env, alpha_sigma=0.00001, alpha_u=0.0001, history_size=50, population_size=500, initial_sigma=0.5,
                       test_iterations=200)
 
     agent.run(10000)

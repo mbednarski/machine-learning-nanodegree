@@ -6,6 +6,7 @@
 \usepackage{amssymb}
 \usepackage{todonotes}
 \usepackage{algorithm}
+\usepackage{float}
 \usepackage[noend]{algpseudocode}
 \newcommand{\mytilde}{\raise.17ex\hbox{$\scriptstyle\mathtt{‌​\sim}$}}
 \title{Machine Learning Engineer Nanodegree Capstone Project}
@@ -74,6 +75,22 @@ For measuring performance I will use number of episodes until solving the enviro
 \subsection{Data Exploration}
 
 As it is a reinforcement learning problem, there is no dataset understood in classical way.
+
+However, I performed an analysis of state distribution. In selected approach this does not give much value, but if other method would be chosen (for instance space discretization or state encoding) it could be valuable.
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{random.png} 
+\caption{Random agent - 1000 episodes}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.5]{trained.png} 
+\caption{Trained agent - 1000 episodes}
+\end{figure}
+
+As can be seen distribution is pretty similar. $s_0, s_4, s_5$ are basically the same. Trained agent produced much less variance in $s_1, s_2$ and $s_3$. Peak at $0$ in $s_3$ is probably because initial state. $s_6, s_7$ corresponds to leg touching the ground. Given that, is not suprising that trained agent have value $1.0$ more often.
 
 \subsubsection{Action and state space}
 
@@ -352,7 +369,7 @@ In order to provide more complete and reliable analysis for each case multiple r
 
 In fact, for all parameters model was able to solve the task.
 
-\subsection{Results and visualization}
+\subsection{Results}
 
 In results analysis I will use baseline parameter values. Implemented model finished learning phase after 55 iterations and approximately 23 minutes. As population size was set to 500, this gives actual number of simulation episodes  $55 * 500 = 27500$. After learning phase there were 200 test runs (without learning). To sum up, agent achieved "average for 100 consecutive trials above 200" at iteration \textbf{21} after total number of episodes equal to $21 * 500 = 10500$. So here is the point when environment can be considered as solved (even if agent was learning longer).
 
@@ -380,15 +397,29 @@ Presented model performed better than one selected in benchmark section. To reca
 Hardware environment used in this project is Intel i5 3,1GHz CPU with 16GB RAM memory and Linux Mint 18.1 x64.
 
 \section{Conclusion}
+
+\subsection{Free form visualization}
+
+Some visual analysis was already performed in results section. Here I will describe one interesting aspect that I found during development.
+
+Mostly all of trials I have monitored created similar pattern. (I selected plot where it is easy to see). Just after the start, there is a sudden drop (A). Afterwards there is long phase with steady scores (B). At some point it starts growing (C) and converges near optimum (D).
+
+For visualization I have also created a video. It is included in the repository in file \textbf{solving.mp4} WARNING: this video contains loud sound.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.9]{clues.png} 
+\caption{Reward history for configuration \#4}
+\end{figure}
+
+
 \subsection{Reflection}
 
 To put it briefly: I have implemented the PEGP algorithm in multi-threaded version in order to solve LunarLander-v2 reinforcement learning problem. Implemented solution uses feed forward neural network with one hidden layer and does not require backpropagation. I am satisfied with achieved results. I found aspect of optimizing code very interesting even if I was not able to utilize GPU. Another interesting thing was to actually research algorithms that could help me - at some point I wanted to give up because I had feeling, that I will not be able to complete this project.
 
 \subsection{Improvement}
 
-PEPG algorithm can benefit from technique called \emph{symmetrical sampling}. Briefly it generates random perturbations ($\epsilon$) on current policy($\mu$ and apply as addition and a subtraction, resulting in two populations - $\mu - \epsilon$ and $\mu + epsilon$). This makes gradient estimation more precise and reduces variance. However this makes implementation more complicated and due the fact that I am satisfied with current results I did not decide to implement this.
-
-Another improvement could be deeper parameter exploration (as mentioned earlier).
+PEPG algorithm can benefit from technique called \emph{symmetrical sampling}. Briefly it generates random perturbations ($\epsilon$) on current policy($\mu$ and apply as addition and a subtraction, resulting in two populations - $\mu - \epsilon$ and $\mu + epsilon$). This makes gradient estimation more precise and reduces variance. However this makes implementation more complicated and due the fact that I am satisfied with current results I did not decide to implement this. Another improvement could be deeper parameter exploration (as mentioned earlier).
 
 
 \newpage

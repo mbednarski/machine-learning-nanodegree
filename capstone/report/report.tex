@@ -60,6 +60,12 @@ Rewards and penalties are already defined in the environment:
 
 Environment is considered as solved, when average episode reward for 100 consecutive episodes is at least 200.
 
+\subsection{Solution statement}
+
+Solution for this problem can be expressed as a policy $\pi$ such that, following it will allow lander to safely touch the ground and receive as high reward as possible. In order to find such policy I will search over policy space using policy gradient approximation. Fast convergence to optimal policy is nice to have but it is not a must.
+
+More details and definitions about policy is provided in Analysis section.
+
 \subsection{Evaluation metric}
 
 For measuring performance I will use number of episodes until solving the environment and time to reach it. This is because I suppose, that some approaches may perform more, faster episodes when others conversely - less, longer episodes.
